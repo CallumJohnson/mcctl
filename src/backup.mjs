@@ -384,6 +384,26 @@ export function listSnapshots(name) {
     .sort((a, b) => b.mtime - a.mtime)
 }
 
+/**
+ * When the newest snapshot of a server was taken, or null if it has none.
+ *
+ * <p>For the panel's overview, which asks this of every server at once: the archives' own times
+ * and nothing else - no manifests read, no folder made for a server that has never been backed up -
+ * and asynchronous, because it runs on the panel's request path.
+ */
+export async function newestSnapshotAt(name) {
+  const dir = path.join(BACKUPS_DIR, name)
+  let files
+  try {
+    files = (await fs.promises.readdir(dir)).filter((f) => f.endsWith('.tar.gz'))
+  } catch {
+    return null
+  }
+  const times = await Promise.all(files.map((f) => fs.promises.stat(path.join(dir, f)).then((s) => s.mtimeMs, () => 0)))
+  const newest = Math.max(0, ...times)
+  return newest || null
+}
+
 export function resolveSnapshot(name, ref) {
   const all = listSnapshots(name)
   if (!all.length) fail(`no snapshots exist for "${name}"`)

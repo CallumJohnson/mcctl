@@ -1343,6 +1343,29 @@ async function route(req, res) {
     return json(res, 200, rows)
   }
 
+  // ---- the overview: what every server needs, in one answer -------------------
+  // The per-server facts the Overview screen needs and the server list does not carry: when each
+  // was last backed up and whether it backs itself up. The schedule is read from SpawnLoft's own
+  // task file, not asked of the operating system's scheduler - that starts a process per ask, and
+  // this is asked for every server at once. Plus the machine's memory, for "14 of 32 GB reserved".
+  if (seg[1] === 'overview' && seg.length === 2 && req.method === 'GET') {
+    const tasks = Object.values(schedule.load().tasks)
+    const servers = {}
+    await Promise.all(registry.listInstances().map(async (i) => {
+      const mine = tasks.filter((t) => t.instance === i.name && t.action?.type === 'backup')
+      const auto = mine.find((t) => t.owner === schedule.OWNER_BACKUPS) ?? mine.find((t) => !t.owner && t.name === 'Automatic backup') ?? null
+      servers[i.name] = {
+        lastBackupAt: await backup.newestSnapshotAt(i.name),
+        autoBackup: auto ? { enabled: auto.enabled !== false, schedule: auto.schedule, keep: auto.action.keep ?? null } : null,
+      }
+    }))
+    return json(res, 200, {
+      machine: { memoryMb: Math.round(os.totalmem() / 1048576) },
+      automaticAvailable: platformCapabilities().scheduler,
+      servers,
+    })
+  }
+
   // ---- adopt a server that already exists ----------------------------------
   // The most likely person to download mcctl already runs a Minecraft server. Registering the
   // folder they have is a first-class path, not an advanced one, so the empty panel offers it
