@@ -565,6 +565,11 @@ setInterval(() => { const end = performance.now() + 50; while (performance.now()
       const source = path.join(data, 'run', name, filename)
       if (fs.existsSync(source)) fs.copyFileSync(source, path.join(output, filename))
     }
+    // The panel's own log, which records every time its event loop was held for longer than it
+    // should be. A request that timed out - the MySQL step's 4 s poll has, three times - is either
+    // the panel blocking or the runner being slow, and this is the file that says which.
+    const panelLog = path.join(data, 'run', 'panel.log')
+    if (fs.existsSync(panelLog)) fs.copyFileSync(panelLog, path.join(output, 'panel.log'))
     fs.writeFileSync(path.join(output, 'smoke.log'), log.join('\n'))
     fs.writeFileSync(path.join(output, 'renderer-errors.json'), JSON.stringify(errors, null, 2))
     if (safeToRemove) {
