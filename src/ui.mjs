@@ -31,6 +31,7 @@ import * as mrpack from './mrpack.mjs'
 import * as neoforge from './neoforge.mjs'
 import * as worlds from './worlds.mjs'
 import * as mclogs from './mclogs.mjs'
+import * as configFiles from './config-files.mjs'
 import { diagnose, crashReports } from './diagnose.mjs'
 import { rconExposure } from './exposure.mjs'
 import { acceptableWebhook } from './notify.mjs'
@@ -404,6 +405,40 @@ function coerceProp(spec, raw) {
  * made while it is running takes effect on the next start, and the response says so rather than
  * leaving someone to wonder why nothing happened.
  */
+/**
+ * The whole of server.properties, as text, for the settings screen's raw editor.
+ *
+ * <p>The same path the assistant's write_config_file takes, so the two cannot differ on what is
+ * safe: the file is shown with its RCON password hidden, a save puts every hidden value back from
+ * the file on disk, refuses a change to the ports and RCON settings SpawnLoft writes at every start,
+ * and snapshots the file on its own first, so the Backups tool can put back just this one file.
+ */
+async function handleRawProps(req, res, name) {
+  const inst = registry.getInstance(name)
+  if (req.method === 'GET') {
+    const out = configFiles.readConfigFile(inst, 'server.properties')
+    return json(res, 200, { text: out.text, redacted: out.redacted })
+  }
+  if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' })
+  const body = await readBody(req)
+  if (typeof body.text !== 'string') return json(res, 400, { error: 'text is required' })
+  const { full, shown } = configFiles.resolveConfigPath(inst, 'server.properties')
+  const before = await fs.promises.readFile(full, 'utf8')
+  const plan = configFiles.planConfigWrite(inst, shown, {
+    content: configFiles.restoreHidden(before, body.text),
+    hiddenRestored: true,
+  })
+  const snap = await backup.createSnapshot(inst, { scope: 'config', label: 'before-edit', members: [plan.shown], flush: false })
+  // The snapshot took a moment; the server writing its own properties meanwhile must not be lost.
+  if (!configFiles.unchangedSince(plan)) fail('server.properties changed while it was being snapshotted; reload it and try again')
+  configFiles.applyConfigWrite(plan)
+  return json(res, 200, {
+    snapshot: path.basename(snap.file),
+    appliesOnRestart: supervisor.isRunning(name),
+    diff: configFiles.summarizeChange(plan.before, plan.after),
+  })
+}
+
 async function handleProps(req, res, name) {
   const inst = registry.getInstance(name)
   const file = path.join(inst.dir, 'server.properties')
@@ -1511,6 +1546,7 @@ async function route(req, res) {
   }
 
   // Reads and writes, so it sits above the gate that allows only POST past this point.
+  if (seg[3] === 'props' && seg[4] === 'raw') return handleRawProps(req, res, name)
   if (seg[3] === 'props') return handleProps(req, res, name)
   if (seg[3] === 'backups') return handleBackups(req, res, name, seg)
   if (seg[3] === 'schedules') return handleSchedules(req, res, name, seg)

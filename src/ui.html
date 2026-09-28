@@ -1380,6 +1380,90 @@
   .set-head h3 { margin: 0; font: 650 var(--t-3)/1.3 var(--ui); color: var(--ink); text-transform: none; letter-spacing: -.005em; }
   .set-head p { margin: 0; font: var(--t-2)/1.45 var(--ui); color: var(--ink-3); }
 
+  /* ---- server settings: a form, its sections listed beside it -------------- */
+
+  /*
+    The list is 240px and stays in view; the form beside it is at most 820px, because a label and a
+    control 1200px apart read as two unrelated things. Each row is the setting on the left - its
+    name, a Default or Changed tag, the first sentence of its help - and the control on the right,
+    280px, with only the faintest rule between rows.
+  */
+  #settingsBody.set-screen { grid-template-columns: 240px minmax(0, 820px); align-items: start; gap: var(--s-5) var(--s-6); }
+  #settingsBody.set-screen > .pane-foot, #settingsBody.set-screen > .hint, #settingsBody.set-screen > .bad { grid-column: 1 / -1; }
+  .set-nav { position: sticky; top: var(--s-4); display: grid; gap: 2px; align-content: start; }
+  .set-nav button {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s-2);
+    width: 100%; padding: 7px 10px;
+    background: transparent; border: 1px solid transparent; box-shadow: none;
+    border-radius: var(--r-sm);
+    color: var(--ink-2); font: 500 var(--t-3)/1.3 var(--ui); text-align: left;
+    white-space: normal;
+  }
+  .set-nav button:hover:not(:disabled) { background: var(--hover); color: var(--ink); border-color: transparent; transform: none; }
+  .set-nav button[aria-current="true"] { background: var(--raised); border-color: var(--line); color: var(--ink); font-weight: 600; box-shadow: inset var(--spine) 0 0 var(--lapis); }
+  .set-nav button.mono { font-family: var(--mono); font-size: var(--t-2); }
+  .set-nav .dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: var(--lapis); }
+  .set-nav-sep { height: 1px; margin: var(--s-2) 10px; background: var(--line-soft); }
+
+  .set-form { display: grid; gap: var(--s-6); min-width: 0; }
+  .set-form > .section { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; gap: 0; scroll-margin-top: var(--s-4); }
+  .set-form .set-head, .set-raw .set-head { display: block; padding-bottom: var(--s-2); border-bottom: 1px solid var(--line-soft); }
+  .set-form .set-head .mark { display: none; }
+  .set-form .set-head h3, .set-raw .set-head h3 { font: 650 18px/1.3 var(--display); letter-spacing: -.01em; }
+  .set-raw .set-head h3.mono { font-family: var(--mono); font-size: var(--t-5); }
+  .set-form .set-head p, .set-raw .set-head p { margin-top: 3px; }
+  /* The sections that are not rows of settings - software, databases - get the same breathing room. */
+  .set-form > .section > :not(.set-head):not(.set-row) { margin-top: var(--s-3); }
+
+  .set-row { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--s-2) var(--s-5); align-items: start; padding: var(--s-3) 0; border-bottom: 1px solid var(--line-faint); }
+  .set-row:last-child { border-bottom: 0; }
+  .set-label { display: grid; gap: 4px; min-width: 0; }
+  .set-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+  .set-title label { font: 600 var(--t-3)/1.35 var(--ui); color: var(--ink); cursor: pointer; }
+  .set-label .hint { margin: 0; }
+  .set-tag {
+    display: inline-flex; align-items: center;
+    padding: 2px 7px; border-radius: 999px;
+    font: 600 var(--t-1)/1.3 var(--ui); letter-spacing: .02em;
+    color: var(--ink-3); background: rgba(var(--ink-rgb), .03); border: 1px solid var(--line);
+  }
+  .set-tag[data-tone="changed"] { color: var(--lapis-ink); background: var(--lapis-wash); border-color: var(--lapis-edge); }
+  details.more > summary { width: max-content; cursor: pointer; list-style: none; font: 500 var(--t-2)/1.4 var(--ui); color: var(--lapis-ink); }
+  details.more > summary::-webkit-details-marker { display: none; }
+  details.more > summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+  details.more > .hint { margin: 4px 0 0; }
+  .set-control { display: grid; gap: 6px; min-width: 0; justify-items: stretch; }
+  .set-control > .switch { justify-self: start; }
+  .set-stack { display: grid; gap: 6px; min-width: 0; }
+  .set-row[data-changed] .set-control input:not(.switch), .set-row[data-changed] .set-control select { border-color: var(--lapis-edge); }
+  .set-row[data-changed] .set-control .switch { border-color: var(--lapis-edge); }
+
+  .set-bar { gap: var(--s-2) var(--s-3); }
+  .set-bar .bar-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--lapis); }
+  .set-bar .bar-count { font: 600 var(--t-3)/1.3 var(--ui); color: var(--ink); }
+  .set-bar .hint { margin: 0; }
+
+  .set-raw { display: grid; gap: var(--s-3); min-width: 0; }
+  .set-raw textarea {
+    width: 100%; min-height: 440px; resize: vertical;
+    padding: var(--s-3) var(--s-4);
+    background: var(--sunken); color: var(--ink);
+    border: 1px solid var(--line); border-radius: var(--r-sm);
+    font: var(--t-3)/1.6 var(--mono);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35);
+  }
+  .set-raw textarea:focus { outline: none; border-color: var(--lapis-edge); background-color: var(--field-focus); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .3), 0 0 0 3px var(--lapis-wash); }
+
+  /* Docked beside the console the form has 480px: the list becomes a row above it, and each
+     setting's control goes under its name. */
+  @container pane (max-width: 760px) {
+    #settingsBody.set-screen { grid-template-columns: minmax(0, 1fr); }
+    .set-nav { position: static; display: flex; flex-wrap: wrap; gap: 4px; }
+    .set-nav button { width: auto; }
+    .set-nav-sep { display: none; }
+    .set-row { grid-template-columns: minmax(0, 1fr); }
+  }
+
   /* ---- a switch, for things that are on or off ------------------------------ */
 
   /*
@@ -7177,24 +7261,27 @@ function renderBackupHistory(row, data, signature) {
 }
 
 /**
- * The server's own settings, in a tab.
+ * The server's own settings: one form, its sections listed down the side.
  *
- * <p>These were a modal dialog until the panel grew tabs. A dialog was the right shape when this
- * was the only way to reach them and the panel had nowhere to put them; it is the wrong shape for
- * something you read as often as you change, and it could not show anything alongside the console.
+ * <p>These were a modal dialog until the panel grew tabs, then a wall of cards. A form reads top to
+ * bottom and says, row by row, what is still Minecraft's default and what has been changed and not
+ * saved - which the cards left to be remembered. The sections are listed beside it with a dot on
+ * any that holds an unsaved change, so a long form does not hide what is waiting in it.
  *
  * <p>Fields come from what the API says is editable rather than from a list kept here, so the panel
- * and the core cannot drift about what exists or what a field will accept.
+ * and the core cannot drift about what exists or what a field will accept. The whole file is one
+ * more entry in the list, for the keys the form does not cover.
  */
 async function renderServerSettings() {
   const row = rowOf(state.current);
   const body = $('#settingsBody');
   if (!row) { body.textContent = ''; clearPaneHead(body); return; }
-  if (isDb(row)) return renderDatabaseSettings(row);
+  if (isDb(row)) { body.classList.remove('set-screen'); return renderDatabaseSettings(row); }
 
   // Re-rendering under someone mid-edit would silently discard what they had typed.
   if (body.dataset.for === row.name && body.childElementCount) return;
   body.dataset.for = row.name;
+  body.classList.add('set-screen');
   body.textContent = '';
 
   const loading = document.createElement('div');
@@ -7202,116 +7289,178 @@ async function renderServerSettings() {
   loading.textContent = 'Reading server.properties…';
   body.append(loading);
 
+  const base = '/instances/' + encodeURIComponent(row.name);
   let data;
   try {
-    data = await api('/instances/' + encodeURIComponent(row.name) + '/props');
+    data = await api(base + '/props');
   } catch (e) {
     body.textContent = '';
     const bad = document.createElement('div');
     bad.className = 'bad';
     bad.textContent = e.message;
     body.append(bad);
-    // Cleared, so leaving the tab and coming back tries again. Leaving it set cached the failure
-    // as if it were the drawn pane, and the error stayed until the server was reselected.
+    // Cleared, so leaving the tool and coming back tries again. Leaving it set cached the failure
+    // as if it were the drawn form, and the error stayed until the server was reselected.
     body.dataset.for = '';
     return;
   }
   if (body.dataset.for !== row.name) return; // switched servers while the fetch was in flight
   body.textContent = '';
-  paneHead(body, 'sliders', 'Server settings',
-    'The part of server.properties people actually change. Takes effect on the next start.');
+  paneHead(body, 'sliders', 'Server settings', 'server.properties, and how SpawnLoft runs this server.');
 
-  const note = document.createElement('div');
-  note.className = 'hint';
-  note.textContent = row.status === 'running'
-    ? 'This server is running, so changes take effect the next time it starts.'
-    : 'Applies the next time this server starts.';
-  body.append(note);
+  const el = (tag, cls) => {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    return node;
+  };
+
+  const nav = el('nav', 'set-nav');
+  nav.setAttribute('aria-label', 'Settings sections');
+  const form = el('div', 'set-form');
+  const rawView = el('div', 'set-raw');
+  rawView.hidden = true;
+  body.append(nav, form, rawView);
+
+  // ---- sections and the list of them ------------------------------------------
+
+  const navButtons = new Map();
+  const addNav = (key, title, target) => {
+    const b = el('button');
+    b.type = 'button';
+    b.dataset.section = key;
+    const word = el('span');
+    word.textContent = title;
+    const dot = el('span', 'dot');
+    dot.hidden = true;
+    dot.setAttribute('aria-hidden', 'true');
+    b.append(word, dot);
+    b.onclick = () => {
+      showRaw(false);
+      target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      markNav(key);
+    };
+    nav.append(b);
+    navButtons.set(key, { button: b, dot, title });
+    return b;
+  };
+  const markNav = (key) => {
+    for (const [k, n] of navButtons) n.button.setAttribute('aria-current', String(k === key));
+  };
+
+  const sections = new Map();
+  const sectionFor = (key, meta) => {
+    if (sections.has(key)) return sections.get(key);
+    meta = meta || (data.groups || []).find((g) => g.key === key)
+      || { title: 'Other settings', blurb: 'Everything not filed above.' };
+    const sec = el('section', 'section set-group');
+    sec.dataset.section = key;
+    const head = el('div', 'set-head');
+    const h = el('h3');
+    h.textContent = meta.title;
+    const blurb = el('p');
+    blurb.textContent = meta.blurb;
+    head.append(h, blurb);
+    sec.append(head);
+    form.append(sec);
+    sections.set(key, sec);
+    addNav(key, meta.title, sec);
+    return sec;
+  };
+  // Built in the order the API declares them, so the form does not reorder itself when a field
+  // happens to be missing from a server that has never booted.
+  for (const g of data.groups || []) sectionFor(g.key);
+
+  // ---- one row per setting ------------------------------------------------------
+
+  /*
+    Help is its first sentence, with the rest a click away. Most notes are one sentence; the long
+    ones explain a consequence, which is worth keeping and not worth reading every time the form
+    is opened.
+  */
+  const helpInto = (parent, text) => {
+    if (!text) return;
+    const m = /^(.+?[.!?])\s+(\S[\s\S]*)$/.exec(text);
+    const first = el('p', 'hint');
+    first.textContent = m ? m[1] : text;
+    parent.append(first);
+    if (!m) return;
+    const more = el('details', 'more');
+    const summary = el('summary');
+    summary.textContent = 'More';
+    const rest = el('p', 'hint');
+    rest.textContent = m[2];
+    more.append(summary, rest);
+    parent.append(more);
+  };
+
+  const entries = [];
+  const addRow = (section, { id, label, help, control, entry }) => {
+    const line = el('div', 'set-row');
+    const left = el('div', 'set-label');
+    const title = el('div', 'set-title');
+    const lab = el('label');
+    lab.htmlFor = id;
+    lab.textContent = label;
+    const tags = el('span', 'set-tags');
+    title.append(lab, tags);
+    left.append(title);
+    helpInto(left, help);
+    const right = el('div', 'set-control');
+    right.append(control);
+    line.append(left, right);
+    section.append(line);
+    entries.push({ ...entry, line, tags, section: section.dataset.section });
+    return { line, left, right };
+  };
 
   const controls = new Map();
   const players = data.players;
 
-  /*
-    One card per group instead of nine fields in a column.
-
-    The groups come from the API, beside the field definitions, so the two cannot drift. Anything
-    without a group - a field added to the core and not yet placed - lands in a section at the end
-    rather than disappearing from the only screen that can edit it.
-  */
-  const sections = new Map();
-  const sectionFor = (key) => {
-    if (sections.has(key)) return sections.get(key);
-    const meta = (data.groups || []).find((g) => g.key === key)
-      || { icon: 'sliders', title: 'Other settings', blurb: 'Everything not filed above.' };
-    const card = document.createElement('div');
-    card.className = 'section set-group';
-    const head = document.createElement('div');
-    head.className = 'set-head';
-    const mark = document.createElement('span');
-    mark.className = 'mark';
-    mark.append(icon(meta.icon));
-    const h = document.createElement('h3');
-    h.textContent = meta.title;
-    const blurb = document.createElement('p');
-    blurb.textContent = meta.blurb;
-    head.append(mark, h, blurb);
-    card.append(head);
-    sections.set(key, card);
-    body.append(card);
-    return card;
-  };
-  // Built in the order the API declares them, so the screen does not reorder itself when a field
-  // happens to be missing from a server that has never booted.
-  for (const g of data.groups || []) sectionFor(g.key);
-
   for (const f of data.fields) {
-    const wrap = document.createElement('div');
-    wrap.className = 'field';
-    const label = document.createElement('label');
-    label.setAttribute('for', 'p_' + f.key);
-    label.textContent = f.label;
-    wrap.append(label);
-
     let input;
     if (f.type === 'bool' || f.type === 'enum') {
-      input = document.createElement('select');
+      input = el('select');
       const opts = f.type === 'bool' ? ['true', 'false'] : f.options;
       for (const v of opts) {
-        const o = document.createElement('option');
+        const o = el('option');
         o.value = v;
         o.textContent = f.type === 'bool' ? (v === 'true' ? 'Yes' : 'No') : v;
         o.selected = String(f.value) === v;
         input.append(o);
       }
     } else {
-      input = document.createElement('input');
+      input = el('input');
       input.type = f.type === 'int' ? 'number' : 'text';
       if (f.type === 'int') { input.min = String(f.min); input.max = String(f.max); }
       input.value = f.value == null ? '' : String(f.value);
       input.autocomplete = 'off';
     }
     input.id = 'p_' + f.key;
-    wrap.append(input);
-    controls.set(f.key, { input, original: f.value == null ? '' : String(f.value) });
-
-    const bits = [];
-    if (!f.set) bits.push("Not set yet — this is Minecraft's default.");
-    if (f.note) bits.push(f.note);
-    if (bits.length) {
-      const hint = document.createElement('div');
-      hint.className = 'hint';
-      hint.textContent = bits.join(' ');
-      wrap.append(hint);
-    }
+    const c = { input, original: f.value == null ? '' : String(f.value), set: Boolean(f.set) };
+    controls.set(f.key, c);
+    const { left } = addRow(sectionFor(f.group || 'other'), {
+      id: input.id,
+      label: f.label,
+      help: f.note,
+      control: input,
+      entry: {
+        kind: 'prop',
+        key: f.key,
+        changed: () => input.value.trim() !== c.original,
+        // Minecraft's own default: a key the file does not have yet, which the server writes on
+        // its first start. Shown as a tag rather than a sentence under every field.
+        isDefault: () => !c.set,
+        reset: () => { input.value = c.original; input.dispatchEvent(new Event('change')); },
+      },
+    });
 
     // Changing who can join on a world that already has players is an identity change, not a
     // setting change. Said next to the control, while the decision is being made.
     if (f.key === 'online-mode' && players && players.count > 0) {
-      const warn = document.createElement('div');
-      warn.className = 'inline-warn';
+      const warn = el('div', 'inline-warn');
       warn.hidden = true;
       input.addEventListener('change', () => {
-        const changed = input.value !== controls.get('online-mode').original;
+        const changed = input.value !== c.original;
         warn.hidden = !changed;
         if (!changed) return;
         const goingOnline = input.value === 'true';
@@ -7327,309 +7476,300 @@ async function renderServerSettings() {
               'inventories, plugin data — will not follow, and they will join as new players.'
             : '. Changing this alters how UUIDs are issued, so stored per-player data may not follow.');
       });
-      wrap.append(warn);
+      left.append(warn);
     }
-    sectionFor(f.group || 'other').append(wrap);
   }
 
-  // ---- supervision: mcctl's own settings, not server.properties -------------
-  // Saved by the one Save button with everything else. It goes through a different endpoint
-  // from the properties and takes effect at the next java exit rather than the next start, but
-  // that is the panel's problem to route, not a reason for a second button on the screen.
-  const sup = document.createElement('div');
-  sup.className = 'section set-group';
-  {
-    const head = document.createElement('div');
-    head.className = 'set-head';
-    const mark = document.createElement('span');
-    mark.className = 'mark';
-    mark.append(icon('restart'));
-    const h = document.createElement('h3');
-    h.textContent = 'If it crashes';
-    const blurb = document.createElement('p');
-    blurb.textContent = 'What SpawnLoft does when the server dies without being asked to.';
-    head.append(mark, h, blurb);
-    sup.append(head);
-  }
-  const arWrap = document.createElement('label');
-  arWrap.className = 'row';
-  arWrap.style.cursor = 'pointer';
-  const arSwitch = document.createElement('input');
+  // What SpawnLoft's own settings looked like when the form was drawn, so Save can tell a change
+  // from a visit. Updated after each save so the next one is measured from there.
+  const mine = { autoRestart: row.autoRestart === true, webhook: row.webhook || '', java: row.java || 'java', memory: row.memory || '4G' };
+
+  // ---- if it crashes: SpawnLoft's own settings, not server.properties -----------
+  // Saved by the one Save with everything else. It goes through a different endpoint and takes
+  // effect at the next java exit rather than the next start, but that is the panel's problem to
+  // route, not a reason for a second button on the screen.
+  const crash = sectionFor('crash', { title: 'If it crashes', blurb: 'What SpawnLoft does when the server dies without being asked to.' });
+  const arSwitch = el('input', 'switch');
   arSwitch.type = 'checkbox';
-  arSwitch.className = 'switch';
-  arSwitch.checked = row.autoRestart === true;
-  arWrap.append(arSwitch, document.createTextNode('Restart it automatically'));
-  const arHint = document.createElement('div');
-  arHint.className = 'hint';
-  arHint.textContent = 'Comes back ten seconds after a crash. Three crashes in ten minutes and it '
-    + 'stays down instead of grinding all night. Stopping it yourself always sticks.';
-  sup.append(arWrap, arHint);
-
-  const whField = document.createElement('div');
-  whField.className = 'field';
-  const whLabel = document.createElement('label');
-  whLabel.textContent = 'Discord webhook';
-  const whInput = document.createElement('input');
-  whInput.className = 'mono';
+  arSwitch.id = 's_autorestart';
+  arSwitch.checked = mine.autoRestart;
+  addRow(crash, {
+    id: arSwitch.id,
+    label: 'Restart it automatically',
+    help: 'Comes back ten seconds after a crash. Three crashes in ten minutes and it stays down instead '
+      + 'of grinding all night; stopping it yourself always sticks.',
+    control: arSwitch,
+    entry: {
+      kind: 'own', key: 'autoRestart',
+      changed: () => arSwitch.checked !== mine.autoRestart,
+      value: () => arSwitch.checked,
+      reset: () => { arSwitch.checked = mine.autoRestart; },
+    },
+  });
+  const whInput = el('input', 'mono');
+  whInput.id = 's_webhook';
   whInput.autocomplete = 'off';
   whInput.spellcheck = false;
   whInput.placeholder = 'https://discord.com/api/webhooks/…';
-  whInput.value = row.webhook || '';
-  const whHint = document.createElement('div');
-  whHint.className = 'hint';
-  whHint.textContent = 'Gets a message when the server crashes, recovers, gives up, or a scheduled '
-    + 'task fails. Leave empty for none. Server → Integrations → Webhooks in Discord.';
-  whField.append(whLabel, whInput, whHint);
-  sup.append(whField);
-  body.append(sup);
+  whInput.value = mine.webhook;
+  addRow(crash, {
+    id: whInput.id,
+    label: 'Discord webhook',
+    help: 'Gets a message when the server crashes, recovers, gives up, or a scheduled task fails. '
+      + 'Leave it empty for none; Discord makes one under Server, Integrations, Webhooks.',
+    control: whInput,
+    entry: {
+      kind: 'own', key: 'webhook',
+      changed: () => whInput.value.trim() !== mine.webhook,
+      value: () => whInput.value.trim(),
+      reset: () => { whInput.value = mine.webhook; },
+    },
+  });
 
-  // What mcctl's own settings looked like when the pane was drawn, so Save can tell a change
-  // from a visit. Updated after each save so the next one is measured from there.
-  const mine = { autoRestart: row.autoRestart === true, webhook: row.webhook || '', java: row.java || 'java' };
-
-  // The Server software card below knows the software SpawnLoft can update; on a Fabric or
-  // Spigot server it would have nothing true to say, so it does not appear at all.
-  const canUpdate = ['paper', 'purpur', 'folia', 'asp'].includes(row.loader ?? 'paper');
-
-  // ---- which Java runs it ------------------------------------------------------
+  // ---- which Java runs it, and how much memory it gets --------------------------
   // Per server, not per machine. Someone testing a plugin against 1.20.4 and 26.1 side by side
   // needs 17 on one and 25 on the other, so the picker lists every Java found on the box and
   // takes a path for one it did not find. Each server keeps its own choice.
-  const jv = document.createElement('div');
-  jv.className = 'section set-group';
-  {
-    const head = document.createElement('div');
-    head.className = 'set-head';
-    const mark = document.createElement('span');
-    mark.className = 'mark';
-    mark.append(icon('play'));
-    const h = document.createElement('h3');
-    h.textContent = 'Java';
-    const blurb = document.createElement('p');
-    blurb.textContent = 'Which Java this server runs on. Each server chooses its own, so different '
-      + 'Minecraft versions can run on the Java they need.';
-    head.append(mark, h, blurb);
-    jv.append(head);
-  }
-  const jvField = document.createElement('div');
-  jvField.className = 'field';
-  const jvLabel = document.createElement('label');
-  jvLabel.textContent = 'Runs on';
-  const jvSelect = document.createElement('select');
-  const jvCustom = document.createElement('input');
-  jvCustom.className = 'mono';
+  const jv = sectionFor('java', { title: 'Java and memory', blurb: 'What the server runs on, and how much memory it may use. Both take effect at the next start.' });
+  const jvWrap = el('div', 'set-stack');
+  const jvSelect = el('select');
+  jvSelect.id = 's_java';
+  const jvCustom = el('input', 'mono');
   jvCustom.autocomplete = 'off';
   jvCustom.spellcheck = false;
   jvCustom.placeholder = 'C:\\Program Files\\Java\\jdk-17\\bin\\java.exe';
+  jvCustom.setAttribute('aria-label', 'Path to java');
   jvCustom.hidden = true;
-  const jvHint = document.createElement('div');
-  jvHint.className = 'hint';
-  jvHint.textContent = 'Looking for installed Javas…';
-  jvField.append(jvLabel, jvSelect, jvCustom, jvHint);
-  jv.append(jvField);
-  body.append(jv);
-
-  // Until the list arrives the select is empty, and an empty select must not read as "clear
-  // the Java" when Save compares it with what the server had.
+  jvWrap.append(jvSelect, jvCustom);
+  // Until the list arrives the select is empty, and an empty select must not read as "clear the
+  // Java" when Save compares it with what the server had.
   let javaReady = false;
-  const current = mine.java;
+  const chosenJava = () => (jvSelect.value === '__custom' ? jvCustom.value.trim() : jvSelect.value);
+  const jvRow = addRow(jv, {
+    id: jvSelect.id,
+    label: 'Runs on',
+    help: 'Looking for installed Javas…',
+    control: jvWrap,
+    entry: {
+      kind: 'own', key: 'java',
+      changed: () => javaReady && chosenJava() !== mine.java,
+      value: () => chosenJava(),
+      reset: () => selectJava(mine.java),
+    },
+  });
+  const jvHint = jvRow.left.querySelector('.hint');
+  const selectJava = (bin) => {
+    const option = Array.from(jvSelect.options).find((o) => o.value === bin);
+    if (option) { jvSelect.value = bin; jvCustom.hidden = true; }
+    else { jvSelect.value = '__custom'; jvCustom.hidden = false; jvCustom.value = bin; }
+  };
   api('/java').then((found) => {
     if (body.dataset.for !== row.name) return;
     jvSelect.textContent = '';
     const addOpt = (value, text) => {
-      const o = document.createElement('option');
+      const o = el('option');
       o.value = value;
       o.textContent = text;
       jvSelect.append(o);
-      return o;
     };
-    let matched = false;
     const needs = row.javaNeeds;
     for (const f of found.found) {
       const where = f.path === 'java' ? 'on PATH' : f.path;
       const tooOld = needs && f.major < needs;
-      const o = addOpt(f.path, 'Java ' + f.major + '  ·  ' + where + (tooOld ? '  ·  too old for this server' : ''));
-      if (f.path === current) { o.selected = true; matched = true; }
+      addOpt(f.path, 'Java ' + f.major + '  ·  ' + where + (tooOld ? '  ·  too old for this server' : ''));
     }
-    if (!found.found.some((f) => f.path === 'java')) {
-      const o = addOpt('java', 'Whatever "java" resolves to on PATH');
-      if (current === 'java') { o.selected = true; matched = true; }
-    }
-    const custom = addOpt('__custom', 'A path of my own…');
-    if (!matched) {
-      custom.selected = true;
-      jvCustom.hidden = false;
-      jvCustom.value = current;
-    }
-    const needLine = needs ? 'This server runs Minecraft that needs Java ' + needs + ' or newer. ' : '';
+    if (!found.found.some((f) => f.path === 'java')) addOpt('java', 'Whatever "java" resolves to on PATH');
+    addOpt('__custom', 'A path of my own…');
+    selectJava(mine.java);
+    const needLine = needs ? 'This server needs Java ' + needs + ' or newer. ' : '';
     jvHint.textContent = found.found.length
-      ? needLine + 'Found ' + found.found.length + (found.found.length === 1 ? ' Java' : ' Javas') + ' on this machine. '
-        + 'Installed one somewhere else? Pick the last option and paste the path to java.exe.'
+      ? needLine + 'Found ' + found.found.length + (found.found.length === 1 ? ' Java' : ' Javas') + ' on this machine; '
+        + 'for one installed somewhere else, pick the last option and paste the path to java.exe.'
       : needLine + 'No Java was found on PATH or in the usual install folders. Paste the path to java.exe, or get one from ' + found.download;
     javaReady = true;
+    update();
   }).catch((e) => {
     jvHint.textContent = 'Could not look for Javas: ' + e.message;
     jvSelect.textContent = '';
-    const o = document.createElement('option');
+    const o = el('option');
     o.value = '__custom';
     o.textContent = 'A path of my own…';
     jvSelect.append(o);
     jvCustom.hidden = false;
-    jvCustom.value = current;
+    jvCustom.value = mine.java;
     javaReady = true;
+    update();
   });
   jvSelect.onchange = () => {
     jvCustom.hidden = jvSelect.value !== '__custom';
     if (!jvCustom.hidden) jvCustom.focus();
   };
-  const chosenJava = () => (jvSelect.value === '__custom' ? jvCustom.value.trim() : jvSelect.value);
+
+  const memInput = el('input', 'mono');
+  memInput.id = 's_memory';
+  memInput.autocomplete = 'off';
+  memInput.value = mine.memory;
+  const memBad = el('div', 'bad');
+  const memWrap = el('div', 'set-stack');
+  memWrap.append(memInput, memBad);
+  addRow(jv, {
+    id: memInput.id,
+    label: 'Memory',
+    help: 'The most the server may use, as 4G or 6144M. The whole process sits a little above it, which is normal.',
+    control: memWrap,
+    entry: {
+      kind: 'own', key: 'memory',
+      changed: () => memInput.value.trim() !== mine.memory,
+      value: () => memInput.value.trim(),
+      invalid: () => !checkMemory(memInput, memBad),
+      reset: () => { memInput.value = mine.memory; checkMemory(memInput, memBad); },
+    },
+  });
 
   // ---- the server software itself -------------------------------------------
-  // Off the network until asked: the card shows what is installed from the registry alone, and
-  // only the button talks to the software's own download API.
-  const soft = document.createElement('div');
-  soft.className = 'section set-group';
-  {
-    const head = document.createElement('div');
-    head.className = 'set-head';
-    const mark = document.createElement('span');
-    mark.className = 'mark';
-    mark.append(icon('server'));
-    const h = document.createElement('h3');
-    h.textContent = 'Server software';
-    const blurb = document.createElement('p');
-    blurb.textContent = 'The server build this server runs.';
-    head.append(mark, h, blurb);
-    soft.append(head);
-  }
-  const softNow = document.createElement('div');
-  softNow.className = 'hint mono-path';
-  softNow.textContent = row.jar || '—';
-  const softRow = document.createElement('div');
-  softRow.className = 'row';
-  const softCheck = iconButton('restore', 'Check for updates');
-  softRow.append(softCheck);
-  const softOut = document.createElement('div');
-  softOut.style.display = 'grid';
-  softOut.style.gap = '8px';
-  soft.append(softNow, softRow, softOut);
-  soft.hidden = !canUpdate;
-  body.append(soft);
+  // Off the network until asked: the section shows what is installed from the registry alone, and
+  // only the button talks to the software's own download API. It knows the software SpawnLoft can
+  // update; on a Fabric or Spigot server it would have nothing true to say, so it is not there.
+  const canUpdate = ['paper', 'purpur', 'folia', 'asp'].includes(row.loader ?? 'paper');
+  if (canUpdate) {
+    const soft = sectionFor('software', { title: 'Server software', blurb: 'The server build this server runs.' });
+    const softNow = el('div', 'hint mono-path');
+    softNow.textContent = row.jar || '—';
+    const softRow = el('div', 'row');
+    const softCheck = iconButton('restore', 'Check for updates');
+    softRow.append(softCheck);
+    const softOut = el('div');
+    softOut.style.display = 'grid';
+    softOut.style.gap = '8px';
+    soft.append(softNow, softRow, softOut);
 
-  softCheck.onclick = async () => {
-    softCheck.disabled = true;
-    softOut.textContent = '';
-    const asking = document.createElement('div');
-    asking.className = 'hint';
-    asking.textContent = 'Checking for updates…';
-    softOut.append(asking);
-    let info;
-    try {
-      info = await api('/instances/' + encodeURIComponent(row.name) + '/upgrade');
-    } catch (e) {
-      asking.remove();
-      const bad = document.createElement('div');
-      bad.className = 'bad';
-      bad.textContent = e.message;
-      softOut.append(bad);
+    softCheck.onclick = async () => {
+      softCheck.disabled = true;
+      softOut.textContent = '';
+      const asking = el('div', 'hint');
+      asking.textContent = 'Checking for updates…';
+      softOut.append(asking);
+      let info;
+      try {
+        info = await api(base + '/upgrade');
+      } catch (e) {
+        asking.remove();
+        const bad = el('div', 'bad');
+        bad.textContent = e.message;
+        softOut.append(bad);
+        softCheck.disabled = false;
+        return;
+      }
       softCheck.disabled = false;
-      return;
-    }
-    softCheck.disabled = false;
-    softOut.textContent = '';
+      softOut.textContent = '';
 
-    const line = (text) => {
-      const el = document.createElement('div');
-      el.className = 'hint';
-      el.textContent = text;
-      softOut.append(el);
-      return el;
+      const line = (text) => {
+        const node = el('div', 'hint');
+        node.textContent = text;
+        softOut.append(node);
+        return node;
+      };
+
+      if (!info.current) {
+        line('SpawnLoft did not download this jar, so it cannot tell which build it is or offer updates for it.');
+        return;
+      }
+      line('Runs ' + info.label + ' ' + info.current.version + ', build ' + info.current.build + '.');
+      if (info.buildUpdate) {
+        const channel = info.latestBuild.channel;
+        line('Build ' + info.latestBuild.build + ' is available for ' + info.current.version
+          + (channel && channel !== 'STABLE' ? ' (' + channel.toLowerCase() + ')' : '')
+          + '. The jar it runs now stays in the folder as the way back.');
+        const go = el('button', 'primary');
+        go.textContent = 'Update to build ' + info.latestBuild.build;
+        softOut.append(go);
+        go.onclick = async () => {
+          go.disabled = true;
+          go.textContent = 'Downloading…';
+          try {
+            const out = await post(base + '/upgrade', {});
+            toast('Now on ' + out.to + '.' + (out.running ? ' Restart to load it.' : ''), 'good');
+            await refresh();
+            body.dataset.for = '';
+            renderServerSettings();
+          } catch (e) {
+            toast(e.message, 'bad');
+            go.disabled = false;
+            go.textContent = 'Update to build ' + info.latestBuild.build;
+          }
+        };
+      } else {
+        line('This is the newest build for ' + info.current.version + '.');
+      }
+
+      if (info.newerVersions.length) {
+        const next = info.newerVersions[0];
+        line('Minecraft ' + next + ' is out. Crossing versions migrates the worlds on the next '
+          + 'start, and worlds do not migrate back.');
+        const cross = el('button');
+        cross.textContent = 'Upgrade to ' + next + '…';
+        softOut.append(cross);
+        cross.onclick = async () => {
+          const ok = await ask({
+            title: 'Upgrade ' + row.name + ' to Minecraft ' + next + '?',
+            text: 'The first start migrates the worlds, and worlds do not migrate back. A standard '
+              + 'snapshot is taken first, but check your plugins support ' + next + ' too - a plugin '
+              + 'built for ' + info.current.version + ' may refuse to load.',
+            confirmLabel: 'Upgrade',
+            danger: true,
+            typeToConfirm: row.name,
+          });
+          if (!ok) return;
+          cross.disabled = true;
+          cross.textContent = 'Downloading…';
+          const note = toast('Snapshotting, then downloading ' + info.label + ' ' + next + '…');
+          try {
+            const out = await post(base + '/upgrade', { version: next });
+            note.remove();
+            toast('Now on ' + out.to + '. Snapshot saved first.' + (out.running ? ' Restart to load it.' : ''), 'good');
+            await refresh();
+            body.dataset.for = '';
+            renderServerSettings();
+          } catch (e) {
+            note.remove();
+            toast(e.message, 'bad');
+            cross.disabled = false;
+            cross.textContent = 'Upgrade to ' + next + '…';
+          }
+        };
+      }
     };
+  }
 
-    if (!info.current) {
-      line('SpawnLoft did not download this jar, so it cannot tell which build it is or offer updates for it.');
-      return;
-    }
-    line('Runs ' + info.label + ' ' + info.current.version + ', build ' + info.current.build + '.');
-    if (info.buildUpdate) {
-      const channel = info.latestBuild.channel;
-      line('Build ' + info.latestBuild.build + ' is available for ' + info.current.version
-        + (channel && channel !== 'STABLE' ? ' (' + channel.toLowerCase() + ')' : '')
-        + '. The jar it runs now stays in the folder as the way back.');
-      const go = document.createElement('button');
-      go.className = 'primary';
-      go.textContent = 'Update to build ' + info.latestBuild.build;
-      softOut.append(go);
-      go.onclick = async () => {
-        go.disabled = true;
-        go.textContent = 'Downloading…';
-        try {
-          const out = await post('/instances/' + encodeURIComponent(row.name) + '/upgrade', {});
-          toast('Now on ' + out.to + '.' + (out.running ? ' Restart to load it.' : ''), 'good');
-          await refresh();
-          body.dataset.for = '';
-          renderServerSettings();
-        } catch (e) {
-          toast(e.message, 'bad');
-          go.disabled = false;
-          go.textContent = 'Update to build ' + info.latestBuild.build;
-        }
-      };
-    } else {
-      line('This is the newest build for ' + info.current.version + '.');
-    }
+  // ---- the save bar ---------------------------------------------------------------
 
-    if (info.newerVersions.length) {
-      const next = info.newerVersions[0];
-      line('Minecraft ' + next + ' is out. Crossing versions migrates the worlds on the next '
-        + 'start, and worlds do not migrate back.');
-      const cross = document.createElement('button');
-      cross.textContent = 'Upgrade to ' + next + '…';
-      softOut.append(cross);
-      cross.onclick = async () => {
-        const ok = await ask({
-          title: 'Upgrade ' + row.name + ' to Minecraft ' + next + '?',
-          text: 'The first start migrates the worlds, and worlds do not migrate back. A standard '
-            + 'snapshot is taken first, but check your plugins support ' + next + ' too - a plugin '
-            + 'built for ' + info.current.version + ' may refuse to load.',
-          confirmLabel: 'Upgrade',
-          danger: true,
-          typeToConfirm: row.name,
-        });
-        if (!ok) return;
-        cross.disabled = true;
-        cross.textContent = 'Downloading…';
-        const note = toast('Snapshotting, then downloading ' + info.label + ' ' + next + '…');
-        try {
-          const out = await post('/instances/' + encodeURIComponent(row.name) + '/upgrade', { version: next });
-          note.remove();
-          toast('Now on ' + out.to + '. Snapshot saved first.' + (out.running ? ' Restart to load it.' : ''), 'good');
-          await refresh();
-          body.dataset.for = '';
-          renderServerSettings();
-        } catch (e) {
-          note.remove();
-          toast(e.message, 'bad');
-          cross.disabled = false;
-          cross.textContent = 'Upgrade to ' + next + '…';
-        }
-      };
-    }
-  };
-
-  const actions = document.createElement('div');
-  actions.className = 'pane-foot';
-  const save = document.createElement('button');
-  save.className = 'primary';
-  save.textContent = 'Save settings';
-  const status = document.createElement('span');
-  status.className = 'hint';
-  actions.append(save, status);
-  body.append(actions);
+  /*
+    Stays in view at the bottom of the scroller, and says once what the old screen said under every
+    heading: that nothing here reaches a running server until it starts again. Save and restart is
+    offered only while the server is running; stopped, Save is the primary button.
+  */
+  const bar = el('div', 'pane-foot set-bar');
+  const barDot = el('span', 'bar-dot');
+  barDot.setAttribute('aria-hidden', 'true');
+  const barCount = el('b', 'bar-count');
+  const barWhen = el('span', 'hint');
+  barWhen.textContent = 'Take effect when ' + (row.label || row.name) + ' next starts.';
+  const discard = el('button', 'ghost');
+  discard.type = 'button';
+  discard.textContent = 'Discard';
+  const save = el('button');
+  save.type = 'button';
+  save.textContent = 'Save';
+  const saveRestart = el('button', 'primary');
+  saveRestart.type = 'button';
+  saveRestart.textContent = 'Save and restart';
+  const grow = el('span', 'grow');
+  bar.append(barDot, barCount, barWhen, grow, discard, save, saveRestart);
+  body.append(bar);
 
   /*
     What would be written if Save were pressed now. Two patches, because the properties and
-    mcctl's own settings live behind different endpoints - but one button, because the person
+    SpawnLoft's own settings live behind different endpoints - but one button, because the person
     changing them does not care which file a field lands in.
 
     Only what actually changed: a field left alone is never written, so server.properties keeps
@@ -7637,64 +7777,227 @@ async function renderServerSettings() {
   */
   const pending = () => {
     const props = {};
-    for (const [key, c] of controls) {
-      const now = c.input.value.trim();
-      if (now !== c.original) props[key] = now;
-    }
     const own = {};
-    if (arSwitch.checked !== mine.autoRestart) own.autoRestart = arSwitch.checked;
-    if (whInput.value.trim() !== mine.webhook) own.webhook = whInput.value.trim();
-    if (javaReady && chosenJava() !== mine.java) own.java = chosenJava();
+    for (const e of entries) {
+      if (!e.changed()) continue;
+      if (e.kind === 'prop') props[e.key] = controls.get(e.key).input.value.trim();
+      else own[e.key] = e.value();
+    }
     return { props, own, count: Object.keys(props).length + Object.keys(own).length };
   };
 
-  // The bar says how much is waiting, and the button is only live when something is. A save
-  // that would write nothing used to answer "Nothing changed." after the click; now it cannot
-  // be clicked, and the count beside it is the answer before the question.
-  const dirty = () => {
+  let saving = false;
+  let rawDirty = false;
+  /** Every row's tags and edge, each section's dot, and the bar, from what is in the form now. */
+  function update() {
+    const changedSections = new Set();
+    for (const e of entries) {
+      const changed = e.changed();
+      if (changed) changedSections.add(e.section);
+      e.line.toggleAttribute('data-changed', changed);
+      e.tags.textContent = '';
+      const tag = changed ? 'Changed' : (e.isDefault && e.isDefault() ? 'Default' : '');
+      if (tag) {
+        const t = el('span', 'set-tag');
+        t.textContent = tag;
+        if (changed) t.dataset.tone = 'changed';
+        t.title = changed ? 'Different from what is saved' : 'Not in server.properties yet: this is Minecraft\u2019s own default';
+        e.tags.append(t);
+      }
+    }
+    for (const [key, n] of navButtons) {
+      n.dot.hidden = key === 'raw' ? !rawDirty : !changedSections.has(key);
+      n.button.setAttribute('aria-label', n.title + (n.dot.hidden ? '' : ', unsaved changes'));
+    }
     const n = pending().count;
-    save.disabled = !n;
-    status.textContent = n ? n + (n === 1 ? ' change to save' : ' changes to save') : 'Nothing to save.';
-  };
-  body.addEventListener('input', dirty);
-  body.addEventListener('change', dirty);
-  dirty();
+    const invalid = entries.some((e) => e.invalid && e.changed() && e.invalid());
+    const running = (rowOf(row.name) || row).status === 'running';
+    barDot.hidden = !n;
+    barCount.textContent = n ? n + (n === 1 ? ' unsaved change' : ' unsaved changes') : 'No unsaved changes';
+    discard.disabled = saving || !n;
+    save.disabled = saving || !n || invalid;
+    saveRestart.disabled = saving || !n || invalid;
+    saveRestart.hidden = !running;
+    save.className = running ? '' : 'primary';
+  }
+  form.addEventListener('input', update);
+  form.addEventListener('change', update);
 
-  save.onclick = async () => {
+  discard.onclick = () => {
+    for (const e of entries) if (e.changed()) e.reset();
+    update();
+  };
+
+  const doSave = async ({ restart = false } = {}) => {
     const { props, own, count } = pending();
     if (!count) return;
     if ('java' in own && !own.java) { toast('Pick a Java, or paste the path to one.', 'bad'); return; }
-    save.disabled = true;
-    status.textContent = 'Saving…';
-    let restart = false;
+    saving = true;
+    update();
+    barCount.textContent = 'Saving…';
     try {
       if (Object.keys(props).length) {
-        const out = await post('/instances/' + encodeURIComponent(row.name) + '/props', props);
+        const out = await post(base + '/props', props);
         for (const f of out.fields) {
           const c = controls.get(f.key);
-          if (c) c.original = f.value == null ? '' : String(f.value);
+          if (c) { c.original = f.value == null ? '' : String(f.value); c.set = Boolean(f.set); }
         }
-        restart = restart || Boolean(out.appliesOnRestart);
       }
       if (Object.keys(own).length) {
-        await post('/instances/' + encodeURIComponent(row.name) + '/settings', own);
+        await post(base + '/settings', own);
         Object.assign(mine, own);
-        // A Java change waits for the next start; the crash settings for the next exit. On a
-        // running server both mean "not yet", and the toast says so once.
-        restart = restart || (row.status === 'running');
       }
+      const running = (rowOf(row.name) || row).status === 'running';
       toast('Saved ' + count + (count === 1 ? ' setting' : ' settings')
-        + (restart ? '. Restart ' + row.name + ' to apply.' : '.'), 'good');
+        + (running && !restart ? '. Restart ' + (row.label || row.name) + ' to apply.' : '.'), 'good');
+      saving = false;
+      update();
       await refresh();
+      if (restart && state.current === row.name) await act('restart')();
     } catch (e) {
       toast(e.message, 'bad');
     } finally {
-      dirty();
+      saving = false;
+      update();
     }
   };
+  save.onclick = () => doSave();
+  saveRestart.onclick = () => doSave({ restart: true });
 
-  // Last, after the file-backed sections: the databases this server is attached to.
-  if (body.dataset.for === row.name) await renderServerDatabases(row, body);
+  // ---- the whole file -------------------------------------------------------------
+
+  /*
+    server.properties as text, for the forty-odd keys the form does not cover. Shown the way the
+    assistant's config tools show it - the RCON password hidden - and saved the same way: hidden
+    values put back from the file, the ports and RCON SpawnLoft manages refused, and the file
+    snapshotted on its own first. A save here does not go through the bar: it is one file, written
+    at once, and the form's own changes are left as they are.
+  */
+  const rawHead = el('div', 'set-head');
+  const rawTitle = el('h3', 'mono');
+  rawTitle.textContent = 'server.properties';
+  const rawBlurb = el('p');
+  rawBlurb.textContent = 'The whole file. Values shown as [redacted] are hidden: leave those lines as they are. '
+    + 'The ports and RCON are set by SpawnLoft at every start, so a change to them is refused.';
+  rawHead.append(rawTitle, rawBlurb);
+  const rawText = el('textarea', 'mono');
+  rawText.spellcheck = false;
+  rawText.setAttribute('aria-label', 'server.properties');
+  rawText.rows = 24;
+  const rawRow = el('div', 'row');
+  const rawSave = el('button', 'primary');
+  rawSave.type = 'button';
+  rawSave.textContent = 'Save file';
+  const rawReload = el('button', 'ghost');
+  rawReload.type = 'button';
+  rawReload.textContent = 'Reload';
+  const rawNote = el('span', 'hint');
+  rawRow.append(rawSave, rawReload, rawNote);
+  rawView.append(rawHead, rawText, rawRow);
+  let rawLoaded = null;
+
+  const setRawDirty = () => {
+    rawDirty = rawLoaded !== null && rawText.value !== rawLoaded;
+    rawSave.disabled = !rawDirty;
+    update();
+  };
+  rawText.addEventListener('input', setRawDirty);
+
+  const loadRaw = async () => {
+    rawNote.textContent = 'Reading server.properties…';
+    try {
+      const out = await api(base + '/props/raw');
+      rawLoaded = out.text.replace(/\r\n/g, '\n');
+      rawText.value = rawLoaded;
+      rawNote.textContent = '';
+    } catch (e) {
+      rawNote.textContent = e.message;
+    }
+    setRawDirty();
+  };
+
+  /** The form's fields, brought up to date with a file changed underneath them. An untouched
+   *  field takes the new value; one with an unsaved change keeps it, measured from the new one. */
+  const reloadFields = async () => {
+    let fresh;
+    try { fresh = await api(base + '/props'); } catch { return; }
+    for (const f of fresh.fields) {
+      const c = controls.get(f.key);
+      if (!c) continue;
+      const value = f.value == null ? '' : String(f.value);
+      if (c.input.value.trim() === c.original) c.input.value = value;
+      c.original = value;
+      c.set = Boolean(f.set);
+    }
+    update();
+  };
+
+  rawSave.onclick = async () => {
+    rawSave.disabled = true;
+    rawNote.textContent = 'Saving…';
+    try {
+      const out = await post(base + '/props/raw', { text: rawText.value });
+      toast('Saved server.properties. A snapshot of it was taken first'
+        + (out.appliesOnRestart ? '; restart ' + (row.label || row.name) + ' to apply.' : '.'), 'good');
+      await loadRaw();
+      await reloadFields();
+    } catch (e) {
+      rawNote.textContent = '';
+      toast(e.message, 'bad');
+      setRawDirty();
+    }
+  };
+  rawReload.onclick = async () => {
+    if (rawDirty) {
+      const ok = await ask({ title: 'Discard your edits to server.properties?', text: 'Reloading reads the file again as it is on disk.', confirmLabel: 'Reload', danger: true });
+      if (!ok) return;
+    }
+    await loadRaw();
+  };
+
+  function showRaw(on) {
+    form.hidden = on;
+    bar.hidden = on;
+    rawView.hidden = !on;
+    if (on) {
+      markNav('raw');
+      if (rawLoaded === null) loadRaw();
+    }
+  }
+
+  const sep = el('div', 'set-nav-sep');
+  sep.setAttribute('role', 'separator');
+  nav.append(sep);
+  const rawNav = addNav('raw', 'server.properties', rawView);
+  rawNav.classList.add('mono');
+  rawNav.onclick = () => { showRaw(true); rawText.focus(); };
+
+  // Which section is on screen, as the form scrolls: the list says where you are in it.
+  const scroller = body.closest('.pane-scroll');
+  const spy = () => {
+    if (!rawView.hidden || !scroller) return;
+    const top = scroller.getBoundingClientRect().top + 80;
+    let current = null;
+    for (const [key, sec] of sections) if (sec.getBoundingClientRect().top <= top) current = key;
+    markNav(current || sections.keys().next().value);
+  };
+  if (scroller) {
+    scroller.onscroll = spy;
+  }
+
+  // Last, after the file-backed sections: the databases this server is attached to. It is one of
+  // the sections, so it goes in the list too.
+  update();
+  if (body.dataset.for === row.name) {
+    await renderServerDatabases(row, body, form);
+    const dbSection = form.querySelector('[data-section="databases"]');
+    if (dbSection && !navButtons.has('databases')) {
+      sections.set('databases', dbSection);
+      addNav('databases', 'Databases', dbSection);
+      nav.insertBefore(navButtons.get('databases').button, sep);
+    }
+  }
+  spy();
 }
 
 // --------------------------------------------------------------- manage ----
@@ -8030,11 +8333,12 @@ async function showCredentials(dbName, serverName) {
  * The Databases card on a server's Settings tab: what it is attached to, with credentials one
  * click away, and a way to attach it to another.
  */
-async function renderServerDatabases(row, body) {
+async function renderServerDatabases(row, body, into = body) {
   const card = document.createElement('div');
   card.className = 'section set-group';
+  card.dataset.section = 'databases';
   // With the other sections, above the Save bar: it is one of them, not a footnote to them.
-  const foot = body.querySelector(':scope > .pane-foot');
+  const foot = into.querySelector(':scope > .pane-foot');
   const head = document.createElement('div');
   head.className = 'set-head';
   const mark = document.createElement('span');
@@ -8046,7 +8350,7 @@ async function renderServerDatabases(row, body) {
   blurb.textContent = 'Attach a database, then use Show credentials to configure your plugins manually. SpawnLoft does not edit plugin configs.';
   head.append(mark, h, blurb);
   card.append(head);
-  if (foot) body.insertBefore(card, foot); else body.append(card);
+  if (foot) into.insertBefore(card, foot); else into.append(card);
 
   const list = document.createElement('div');
   list.style.display = 'grid';

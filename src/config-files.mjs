@@ -166,7 +166,7 @@ export function readConfigFile(inst, relative) {
  * exact `oldText` -> `newText` replacement that must match once. Everything that would be refused
  * is refused here, so the caller can snapshot and write knowing the write is acceptable.
  */
-export function planConfigWrite(inst, relative, { content, oldText, newText } = {}) {
+export function planConfigWrite(inst, relative, { content, oldText, newText, hiddenRestored = false } = {}) {
   const whole = content !== undefined
   const edit = oldText !== undefined || newText !== undefined
   if (whole === edit) fail('give either content (the whole new file) or old_text and new_text (one exact replacement), not both')
@@ -183,8 +183,9 @@ export function planConfigWrite(inst, relative, { content, oldText, newText } = 
     }
   }
 
-  // A whole-file write of a file with hidden values could only drop them or guess them.
-  if (whole && before !== null && redactConfig(before) !== before) {
+  // A whole-file write of a file with hidden values could only drop them or guess them - unless
+  // restoreHidden has already put each one back from the file on disk.
+  if (whole && !hiddenRestored && before !== null && redactConfig(before) !== before) {
     fail(`${shown} has values SpawnLoft hides (passwords, tokens), so it is not rewritten whole. Use old_text and new_text to change the lines you mean to.`)
   }
 
@@ -224,6 +225,32 @@ export function planConfigWrite(inst, relative, { content, oldText, newText } = 
     }
   }
   return { full, shown, existed: exists, before, after }
+}
+
+/**
+ * A whole file edited as it was shown - hidden values and all - with the hidden values put back.
+ *
+ * <p>For the panel's raw server.properties editor, which shows the file the way read_config_file
+ * does, with the RCON password as [redacted]. Hiding is line by line, so a line that still carries
+ * a placeholder is matched to the line it was shown as, and that line's real text is written in its
+ * place. A placeholder on a line that was not shown that way - a hidden value edited, or pasted
+ * somewhere new - is refused: the real value is changed by hand, in the file itself.
+ */
+export function restoreHidden(before, shownText) {
+  const shown = redactConfig(before).split('\n').map((l) => l.replace(/\r$/, ''))
+  const real = before.split('\n').map((l) => l.replace(/\r$/, ''))
+  const used = new Set()
+  return shownText.split('\n').map((line) => {
+    const bare = line.replace(/\r$/, '')
+    if (!PLACEHOLDERS.some((p) => bare.includes(p))) return bare
+    const at = shown.findIndex((s, i) => !used.has(i) && s === bare)
+    if (at === -1) {
+      fail(`"${bare.trim()}" has a hidden value in it and is not a line of the file as it was shown. ` +
+        'Hidden values - passwords and tokens - are changed by hand, in the file itself.')
+    }
+    used.add(at)
+    return real[at]
+  }).join('\n')
 }
 
 /**

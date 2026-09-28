@@ -5,7 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import {
   redactConfig, resolveConfigPath, listConfigFiles, readConfigFile, planConfigWrite, applyConfigWrite,
-  unchangedSince, summarizeChange,
+  unchangedSince, summarizeChange, restoreHidden,
 } from '../src/config-files.mjs'
 
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'sl-config-'))
@@ -191,3 +191,32 @@ test('a listing cut short keeps the top-level files and loses the deepest ones',
   const paths = files.map((f) => f.path)
   assert.ok(paths.includes('server.properties') && paths.includes('plugins/Zed/config.yml'))
 })
+
+// ---- the panel's raw server.properties editor --------------------------------
+
+test('a file edited as it was shown gets its hidden values back, line for line', () => {
+  const inst = server({ 'server.properties': PROPS.replaceAll('\n', '\r\n') })
+  const before = fs.readFileSync(path.join(inst.dir, 'server.properties'), 'utf8')
+  const shown = readConfigFile(inst, 'server.properties').text.replaceAll('\r\n', '\n')
+  assert.ok(shown.includes('rcon.password=[redacted]'))
+  const edited = shown.replace('motd=Hello', 'motd=Welcome back')
+  const plan = planConfigWrite(inst, 'server.properties', { content: restoreHidden(before, edited), hiddenRestored: true })
+  applyConfigWrite(plan)
+  const after = fs.readFileSync(path.join(inst.dir, 'server.properties'), 'utf8')
+  assert.equal(after, before.replace('motd=Hello', 'motd=Welcome back'), 'Only the edited line changes; CRLF and the password are kept')
+})
+
+test('a hidden value that was edited, or pasted somewhere new, is refused', () => {
+  const shown = redactConfig(PROPS)
+  assert.throws(() => restoreHidden(PROPS, shown.replace('rcon.password=[redacted]', 'rcon.password=[redacted]x')), /hidden value/)
+  assert.throws(() => restoreHidden(PROPS, shown + 'backup.password=[redacted]\n'), /hidden value/)
+  // The same hidden line twice is the line and a copy of it, not two lines.
+  assert.throws(() => restoreHidden(PROPS, shown + 'rcon.password=[redacted]\n'), /hidden value/)
+})
+
+test('the raw editor cannot move the ports or RCON either', () => {
+  const inst = server({ 'server.properties': PROPS })
+  const edited = readConfigFile(inst, 'server.properties').text.replace('rcon.port=25576', 'rcon.port=25577')
+  assert.throws(() => planConfigWrite(inst, 'server.properties', { content: restoreHidden(PROPS, edited), hiddenRestored: true }), /rcon\.port/)
+})
+
