@@ -709,6 +709,87 @@
   .door b { font: 600 var(--t-4)/1.3 var(--ui); letter-spacing: -.005em; }
   .door span { font-size: var(--t-3); color: var(--ink-3); line-height: 1.5; }
 
+  /* ---- the overview ----------------------------------------------------- */
+
+  /*
+    Every server at once. Full width now that there is no sidebar, and padded more generously than
+    a working screen: this is the one people look across rather than into.
+  */
+  .home { align-content: start; grid-template-columns: minmax(0, 1fr); gap: var(--s-6); padding: 32px 48px 48px; background: var(--void); overflow: auto; }
+  .home-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--s-4); }
+  .home-title { flex: 1 1 320px; min-width: 0; display: grid; gap: 6px; }
+  .home-title h1 { margin: 0; font: 650 var(--t-7)/1.1 var(--display); letter-spacing: -.028em; }
+  .home-sum { margin: 0; font: var(--t-3)/1.5 var(--ui); color: var(--ink-2); }
+
+  /* Three to a row, in the tone of what they are about; each says one thing and offers one way out. */
+  .attention { display: grid; gap: var(--s-3); }
+  .attention .hist-title { margin: 0; }
+  .att-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-3); }
+  .att {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: var(--s-2) var(--s-3);
+    align-items: start;
+    padding: var(--s-4);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    background: var(--surface);
+  }
+  .att[data-tone="fault"] { background: var(--fault-wash); border-color: var(--fault-edge); }
+  .att[data-tone="warn"] { background: var(--warn-wash); border-color: var(--warn-edge); }
+  .att[data-tone="accent"] { background: var(--lapis-wash); border-color: var(--lapis-edge); }
+  .att-tile { display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--r-sm); background: var(--raised); border: 1px solid var(--line); color: var(--ink-2); }
+  .att-tile .ico { width: 16px; height: 16px; }
+  .att[data-tone="fault"] .att-tile { color: var(--fault-ink); border-color: var(--fault-edge); }
+  .att[data-tone="warn"] .att-tile { color: var(--warn-ink); border-color: var(--warn-edge); }
+  .att[data-tone="accent"] .att-tile { color: var(--lapis-ink); border-color: var(--lapis-edge); }
+  .att-words { display: grid; gap: 3px; min-width: 0; }
+  .att-words b { font: 600 var(--t-3)/1.35 var(--ui); color: var(--ink); }
+  .att-words span { font: var(--t-2)/1.4 var(--ui); color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .att > button { grid-column: 2; justify-self: start; padding: 4px 11px; font-size: var(--t-2); }
+
+  /* "and 2 more": a word to click, not another button competing with the ones in the cards. */
+  button.more-link { justify-self: start; padding: 2px 0; background: none; border: 0; box-shadow: none; color: var(--lapis-ink); font: 500 var(--t-3)/1.4 var(--ui); }
+  button.more-link:hover:not(:disabled) { background: none; border: 0; transform: none; text-decoration: underline; text-underline-offset: 3px; }
+
+  .home-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4); }
+  .scard {
+    display: grid;
+    gap: var(--s-3);
+    padding: var(--s-5);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    min-width: 0;
+    transition: border-color var(--ease);
+  }
+  .scard:hover { border-color: var(--edge); }
+  .sc-head { display: flex; align-items: flex-start; gap: var(--s-3); }
+  .sc-title { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .sc-name { margin: 0; min-width: 0; font: 650 21px/1.2 var(--display); letter-spacing: -.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sc-soft { margin-top: -6px; font: var(--t-2)/1.4 var(--ui); color: var(--ink-3); }
+  .sc-stats { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); padding-top: var(--s-3); border-top: 1px solid var(--line-soft); }
+  .sc-stats > div { display: grid; gap: 5px; min-width: 0; }
+  .sc-stats dt { font: 650 var(--t-1)/1.3 var(--ui); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); white-space: nowrap; }
+  .sc-stats dd { margin: 0; display: flex; align-items: baseline; gap: 5px; min-width: 0; white-space: nowrap; }
+  .sc-stats .big { font: 650 var(--t-5)/1 var(--display); color: var(--ink); letter-spacing: -.01em; }
+  .sc-stats .big[data-tone="warn"] { color: var(--warn-ink); }
+  .sc-stats .of { font: var(--t-2)/1 var(--ui); color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; }
+  .sc-foot { display: flex; align-items: center; gap: var(--s-3); }
+  .sc-note { flex: 1; min-width: 0; font: var(--t-2)/1.4 var(--ui); color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sc-note[data-tone="warn"] { color: var(--warn-ink); }
+  .sc-foot .sc-open { padding: 4px 10px; font-size: var(--t-2); }
+
+  @media (max-width: 1100px) {
+    .home { padding: 28px 32px 40px; }
+    .att-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .home { padding: var(--s-5); }
+    .att-grid, .home-cards { grid-template-columns: minmax(0, 1fr); }
+  }
+
   /* ---- server view ------------------------------------------------------ */
 
   /*
@@ -1886,6 +1967,27 @@
       </div>
     </div>
 
+    <!-- ============ the overview ========================================== -->
+    <!--
+      Every server at once: what each is doing, and the few things that want someone's attention.
+      The screen the Overview tab opens, and the first one once there is anything to show on it.
+    -->
+    <div class="view home" id="vHome">
+      <div class="home-head">
+        <div class="home-title">
+          <h1>Your servers</h1>
+          <p class="home-sum" id="homeSummary"></p>
+        </div>
+        <button class="primary" id="homeNew"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg>New server</button>
+      </div>
+      <section class="attention" id="homeAttention" aria-labelledby="attTitle" hidden>
+        <h2 class="hist-title" id="attTitle">Needs attention</h2>
+        <div class="att-grid" id="attGrid"></div>
+        <button type="button" class="more-link" id="attMore" hidden></button>
+      </section>
+      <div class="home-cards" id="homeCards"></div>
+    </div>
+
     <!-- ============ a server is selected ================================= -->
     <div class="view server" id="vServer">
       <!--
@@ -2631,7 +2733,7 @@ function ask(opts) {
   });
 }
 
-const VIEW_EL = { empty: '#vEmpty', server: '#vServer', add: '#vAdd', settings: '#vSettings', feedback: '#vFeedback' };
+const VIEW_EL = { empty: '#vEmpty', home: '#vHome', server: '#vServer', add: '#vAdd', settings: '#vSettings', feedback: '#vFeedback' };
 
 function show(view) {
   state.view = view;
@@ -2809,8 +2911,7 @@ function back() {
   if (SHEETS.has(entry.from)) {
     show(entry.from);
   } else if (!state.current) {
-    show('empty');
-    renderEmptyFor(state.rows.concat(state.dbs));
+    showHome();
   } else if (state.streamName === state.current) {
     show('server');
     renderServer(rowOf(state.current));
@@ -2992,8 +3093,7 @@ function goHome() {
   stopVitals();
   stopPerfPolling();
   state.current = null;
-  show('empty');
-  renderEmptyFor(state.rows.concat(state.dbs));
+  showHome();
   markTabs();
 }
 $('#tabHome').onclick = goHome;
@@ -3001,18 +3101,24 @@ $('#tabHome').onclick = goHome;
 // ------------------------------------------------------------ server strip ---
 
 /** The state as a pill in its own tones. "Starting…" is the panel's word: the core says running. */
-function renderStatePill(row) {
-  const st = $('#srvState');
-  delete st.dataset.since;
+/**
+ * A server's state in a word and a tone. "Starting…" is the panel's word, said while a start it
+ * asked for is under way: the core says running as soon as the process exists.
+ */
+function describeState(row, acting) {
   let tone = '';
   let text = STATE_TEXT[row.status] ?? row.status;
-  if (state.acting === 'start' || state.acting === 'restart') {
+  let since = null;
+  if (acting === 'start' || acting === 'restart') {
     tone = 'warn';
-    text = state.acting === 'restart' ? 'Restarting…' : 'Starting…';
+    text = acting === 'restart' ? 'Restarting…' : 'Starting…';
+  } else if (acting === 'stop') {
+    tone = 'warn';
+    text = 'Stopping…';
   } else if (row.status === 'running' && !isDb(row)) {
     tone = 'live';
     if (row.startedAt) {
-      st.dataset.since = String(row.startedAt);
+      since = row.startedAt;
       text = 'Running · ' + duration(Date.now() - row.startedAt);
     }
   } else if (row.status === 'running' || row.status === 'reachable') {
@@ -3025,9 +3131,17 @@ function renderStatePill(row) {
   } else if (row.status === 'orphaned' || row.status === 'unknown' || row.status === 'unreachable') {
     tone = 'fault';
   }
-  st.textContent = text;
-  if (tone) st.dataset.tone = tone;
+  return { text, tone, since };
+}
+
+function renderStatePill(row) {
+  const st = $('#srvState');
+  const said = describeState(row, state.acting);
+  st.textContent = said.text;
+  if (said.tone) st.dataset.tone = said.tone;
   else delete st.dataset.tone;
+  if (said.since) st.dataset.since = String(said.since);
+  else delete st.dataset.since;
 }
 
 const FILE_MANAGER = panelPlatform === 'darwin' ? 'Finder' : panelPlatform === 'win32' ? 'Explorer' : 'your file manager';
@@ -3535,21 +3649,393 @@ async function loadDiagnosis(row) {
   }
 }
 
-// With servers registered but none selected, the hero would be lying if it still said "no servers
-// yet". Same view, honest copy.
-function renderEmptyFor(rows) {
-  if (rows.length) {
-    $('#emptyTitle').textContent = 'Pick a server';
-    $('#emptyLede').textContent = 'Choose one from the tabs above to see its console.';
-    // The two doors are the whole point of the screen when there is nothing; once servers exist
-    // they are competing with the tabs, and "add another" already has its + beside them.
-    $('#emptyDoors').hidden = true;
-  } else {
+// --------------------------------------------------------------- overview ---
+
+/**
+ * Where the Overview tab goes: every server at once once there are any, and the two doors in when
+ * there are none - the doors are the whole point of the screen when there is nothing.
+ */
+function showHome() {
+  const any = state.rows.length > 0;
+  show(any ? 'home' : 'empty');
+  if (!any) {
     $('#emptyTitle').textContent = 'No servers yet';
     $('#emptyLede').textContent = 'SpawnLoft runs Minecraft servers on this machine — start them, watch the console, send commands, and reset a world without going near a terminal.';
     $('#emptyDoors').hidden = false;
+    return;
+  }
+  renderOverview();
+  loadOverview();
+}
+
+/*
+  What the server list does not carry: when each server was last backed up, whether it backs itself
+  up, and how much memory the machine has. Asked for when the overview shows and then twice a
+  minute at most - a backup is minutes apart at the closest - and after anything here changes it.
+*/
+const overview = { data: null, asked: 0, showAll: false, attention: '', acting: {} };
+
+async function loadOverview(force) {
+  if (!force && Date.now() - overview.asked < 30000) return;
+  overview.asked = Date.now();
+  try {
+    overview.data = await api('/overview');
+  } catch {
+    return;
+  }
+  if (state.view === 'home') renderOverview();
+}
+
+const gbOf = (mb) => Math.round((mb / 1024) * 10) / 10;
+
+function renderOverview() {
+  const rows = state.rows;
+  const running = rows.filter((r) => r.status === 'running');
+  const reservedMb = rows.reduce((n, r) => n + (memoryCeilingMb(r.memory) || 0), 0);
+  const machineMb = overview.data && overview.data.machine && overview.data.machine.memoryMb;
+  const counted = running.filter((r) => r.latest && r.latest.players != null);
+  const parts = [rows.length + ' on this machine', running.length + ' running'];
+  // Only a figure the servers actually gave; "0 players online" from servers that were not asked
+  // would be a claim about nobody.
+  if (counted.length) {
+    const n = counted.reduce((sum, r) => sum + r.latest.players, 0);
+    parts.push(n + (n === 1 ? ' player' : ' players') + ' online');
+  }
+  parts.push(gbOf(reservedMb) + (machineMb ? ' of ' + Math.round(machineMb / 1024) : '') + ' GB memory reserved');
+  $('#homeSummary').textContent = parts.join(' · ');
+  $('#homeSummary').title = 'Reserved is what the servers are allowed to use, added up, whether or not they are running.';
+
+  renderAttention();
+  renderHomeCards();
+}
+
+// ---- needs attention ----------------------------------------------------------
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const sameDay = (ms) => new Date(ms).toDateString() === new Date().toDateString();
+const clockOf = (ms) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+/**
+ * Whether a server needs a newer Java than it will get. Its own Java where the panel knows which
+ * that is, and otherwise the one SpawnLoft found; and "not known yet" is never read as "missing" -
+ * until /health has answered, nobody is told to go and install anything.
+ */
+function javaShort(row) {
+  if (!row.javaNeeds) return false;
+  const own = javaMajorFor(row);
+  if (own != null) return own < row.javaNeeds;
+  const java = state.health && state.health.java;
+  if (!java) return false;
+  return !java.found || java.major < row.javaNeeds;
+}
+
+/**
+ * The few things that want someone to do something, each with the one thing to do. Nothing here
+ * is shown for its own sake: a card is a crash, updates somebody asked about, a server with no
+ * backups going unprotected, or a Java that will stop servers starting.
+ */
+function attentionItems() {
+  const items = [];
+  const data = overview.data;
+  const nameOf = (r) => r.label || r.name;
+
+  for (const r of state.rows) {
+    if (crashedNow(r)) {
+      items.push({
+        key: 'crash|' + r.name + '|' + (r.stoppedAt || ''), tone: 'fault', icon: 'alert',
+        title: nameOf(r) + ' crashed',
+        text: r.stoppedAt
+          ? 'It stopped on its own ' + (sameDay(r.stoppedAt) ? 'at ' + clockOf(r.stoppedAt) : ago(new Date(r.stoppedAt).toISOString())) + '.'
+          : 'It stopped without being asked to.',
+        action: 'See why', run: () => openServerConsole(r.name),
+      });
+    } else if (r.status === 'running' && r.restarts > 0 && r.startedAt && sameDay(r.startedAt)) {
+      // Each comeback is a fresh launch, so the start time is when the latest one happened.
+      items.push({
+        key: 'restart|' + r.name + '|' + r.restarts, tone: 'fault', icon: 'restart',
+        title: nameOf(r) + ' restarted after a crash',
+        text: r.restarts === 1
+          ? 'Crash guard brought it back at ' + clockOf(r.startedAt) + '.'
+          : 'Crash guard has brought it back ' + r.restarts + ' times, the last at ' + clockOf(r.startedAt) + '.',
+        action: 'See why', run: () => openServerConsole(r.name),
+      });
+    }
+  }
+
+  // Only what a check someone ran has found - no network is asked from here.
+  for (const r of state.rows) {
+    const found = cachedUpdates(r.name);
+    const n = found ? Object.keys(found).length : 0;
+    if (!n) continue;
+    const names = Object.values(found).map((u) => (u.name || u.file.replace(/\.jar$/, '')));
+    items.push({
+      key: 'updates|' + r.name + '|' + n, tone: 'accent', icon: 'plug',
+      title: n + (n === 1 ? ' update' : ' updates') + ' for ' + nameOf(r),
+      text: names.join(', '),
+      action: 'Review', run: () => openServerTool(r.name, 'plugins'),
+    });
+  }
+
+  if (data) {
+    for (const r of state.rows) {
+      const facts = data.servers[r.name];
+      if (!facts || (facts.autoBackup && facts.autoBackup.enabled)) continue;
+      const never = facts.lastBackupAt == null;
+      const days = never ? 0 : Math.floor((Date.now() - facts.lastBackupAt) / DAY_MS);
+      if (!never && !(r.status === 'running' && days >= 7)) continue;
+      items.push({
+        key: 'backup|' + r.name + '|' + (never ? 'never' : days), tone: 'warn', icon: 'archive',
+        title: never ? nameOf(r) + ' has never been backed up' : 'No backup of ' + nameOf(r) + ' in ' + days + ' days',
+        text: data.automaticAvailable
+          ? 'Nightly backups at 03:00, keeping the last 7.'
+          : 'Automatic backups are not available here; take one from Backups.',
+        action: data.automaticAvailable ? 'Turn on' : 'Open Backups',
+        run: data.automaticAvailable ? () => turnOnBackups(r) : () => openServerTool(r.name, 'backups'),
+      });
+    }
+  }
+
+  const short = state.rows.filter(javaShort);
+  if (short.length && state.health) {
+    const need = Math.max(...short.map((r) => r.javaNeeds));
+    const names = short.map(nameOf);
+    items.push({
+      key: 'java|' + need + '|' + names.join(','), tone: 'warn', icon: 'alert',
+      title: 'Java ' + need + ' needed',
+      text: (names.length > 2 ? names.slice(0, 2).join(', ') + ' and ' + (names.length - 2) + ' more' : names.join(' and '))
+        + (names.length === 1 ? ' won’t start until it is installed.' : ' won’t start until it is installed.'),
+      action: 'Get Java', run: () => openOutside(state.health.javaDownload),
+    });
+  }
+  return items;
+}
+
+/*
+  Three to a row, and "and N more" for the rest: a wall of warnings is read as none. Rebuilt only
+  when what it says changes, not on every poll - a card rebuilt under someone's pointer loses the
+  hover and, worse, the focus of the button they were about to press.
+*/
+function renderAttention() {
+  const items = attentionItems();
+  const box = $('#homeAttention');
+  const shown = overview.showAll ? items : items.slice(0, 3);
+  const key = items.map((i) => i.key + '|' + i.title + '|' + i.text).join('\n') + '|' + overview.showAll;
+  box.hidden = !items.length;
+  if (key === overview.attention) return;
+  overview.attention = key;
+
+  const grid = $('#attGrid');
+  grid.textContent = '';
+  for (const item of shown) {
+    const card = document.createElement('div');
+    card.className = 'att';
+    card.dataset.tone = item.tone;
+    const tile = document.createElement('span');
+    tile.className = 'att-tile';
+    tile.append(icon(item.icon));
+    const words = document.createElement('div');
+    words.className = 'att-words';
+    const b = document.createElement('b');
+    b.textContent = item.title;
+    const p = document.createElement('span');
+    p.textContent = item.text;
+    words.append(b, p);
+    const act = document.createElement('button');
+    act.type = 'button';
+    act.textContent = item.action;
+    act.onclick = item.run;
+    card.append(tile, words, act);
+    grid.append(card);
+  }
+  const more = $('#attMore');
+  const rest = items.length - 3;
+  more.hidden = rest <= 0;
+  more.textContent = overview.showAll ? 'Show fewer' : 'and ' + rest + ' more';
+}
+$('#attMore').onclick = () => { overview.showAll = !overview.showAll; renderAttention(); };
+
+/** "See why": that server, its console on screen. */
+function openServerConsole(name) {
+  select(name);
+  showPane('console');
+}
+
+/** "Review", "Open Backups": that server, with the tool open. */
+function openServerTool(name, tool) {
+  select(name);
+  showPane(tool);
+}
+
+/** The default the Backups tool offers: every night at 03:00, keeping seven. */
+async function turnOnBackups(row) {
+  const nightly = AUTO_INTERVALS.find((o) => o.label === 'Daily at 03:00');
+  try {
+    await post('/instances/' + encodeURIComponent(row.name) + '/backups/auto', { enabled: true, schedule: nightly.schedule, keep: 7 });
+    toast('Nightly backups of ' + (row.label || row.name) + ' at 03:00, keeping the last 7.', 'good');
+  } catch (e) {
+    toast(e.message, 'bad');
+  }
+  await loadOverview(true);
+}
+
+// ---- the server cards ----------------------------------------------------------
+
+function buildHomeCard(name) {
+  const el = (tag, cls) => {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    return node;
+  };
+  const card = el('article', 'scard');
+  card.dataset.name = name;
+
+  const head = el('div', 'sc-head');
+  const title = el('div', 'sc-title');
+  title.append(el('h3', 'sc-name'), el('span', 'spill'));
+  const act = el('button', 'sc-act');
+  act.type = 'button';
+  act.onclick = () => cardAct(name);
+  head.append(title, act);
+
+  const stats = el('dl', 'sc-stats');
+  for (const [key, label] of [['players', 'Players'], ['tps', 'TPS'], ['memory', 'Memory'], ['backup', 'Last backup']]) {
+    const cell = el('div');
+    cell.dataset.v = key;
+    const dt = el('dt');
+    dt.textContent = label;
+    cell.append(dt, el('dd'));
+    stats.append(cell);
+  }
+
+  const foot = el('div', 'sc-foot');
+  const open = el('button', 'ghost sc-open');
+  open.type = 'button';
+  open.textContent = 'Open →';
+  open.onclick = () => select(name);
+  foot.append(el('span', 'sc-note'), open);
+
+  card.append(head, el('div', 'sc-soft'), stats, foot);
+  return card;
+}
+
+/** What the card's one button does: stop a running server, start a stopped one. */
+function cardVerb(row) {
+  if (row.status === 'running' || row.status === 'stopping') return { what: 'stop', label: 'Stop', primary: false };
+  return { what: 'start', label: crashedNow(row) ? 'Restart' : 'Start', primary: true };
+}
+
+async function cardAct(name) {
+  const row = rowOf(name);
+  if (!row || overview.acting[name]) return;
+  const verb = cardVerb(row);
+  overview.acting[name] = verb.what;
+  renderHomeCards();
+  const note = toast(ACTION_ING[verb.what] + ' ' + name + '…');
+  try {
+    await post('/instances/' + encodeURIComponent(name) + '/' + verb.what);
+    note.remove();
+    toast(name + ' ' + ACTION_DONE[verb.what] + '.', 'good');
+  } catch (e) {
+    note.remove();
+    toast(e.message, 'bad');
+  } finally {
+    delete overview.acting[name];
+    await refresh();
   }
 }
+
+/** The line at the foot of a card: the one thing about how it is looked after worth knowing. */
+function cardNote(row) {
+  if (javaShort(row)) return { text: 'Needs Java ' + row.javaNeeds + ' to start', tone: 'warn' };
+  const facts = overview.data && overview.data.servers[row.name];
+  if (!facts) return { text: '' };
+  const auto = facts.autoBackup;
+  if (auto && auto.enabled) return { text: 'Backs up ' + describeSchedule(auto.schedule) };
+  if (row.origin && row.origin.clonedFrom) return { text: 'Test copy, backups off' };
+  return { text: 'Backups off' };
+}
+
+function setStat(card, key, value, of, tone) {
+  const dd = card.querySelector('[data-v="' + key + '"] dd');
+  dd.textContent = '';
+  const big = document.createElement('span');
+  big.className = 'big';
+  big.textContent = value;
+  if (tone) big.dataset.tone = tone;
+  dd.append(big);
+  if (of) {
+    const small = document.createElement('span');
+    small.className = 'of';
+    small.textContent = of;
+    dd.append(small);
+  }
+}
+
+function updateHomeCard(card, row) {
+  card.dataset.status = row.status;
+  card.toggleAttribute('data-crashed', crashedNow(row));
+  card.querySelector('.sc-name').textContent = row.label || row.name;
+
+  const pill = card.querySelector('.spill');
+  const said = describeState(row, overview.acting[row.name]);
+  pill.textContent = said.text;
+  if (said.tone) pill.dataset.tone = said.tone;
+  else delete pill.dataset.tone;
+  if (said.since) pill.dataset.since = String(said.since);
+  else delete pill.dataset.since;
+
+  const sw = softwareById[row.loader ?? 'paper'];
+  card.querySelector('.sc-soft').textContent = (sw ? sw.label : (row.loader || 'Paper'))
+    + (row.mcVersion ? ' ' + row.mcVersion : '') + ' · localhost:' + (row.port || '?');
+
+  const verb = cardVerb(row);
+  const act = card.querySelector('.sc-act');
+  act.textContent = verb.label;
+  act.className = 'sc-act' + (verb.primary ? ' primary' : '');
+  act.disabled = Boolean(overview.acting[row.name]) || row.status === 'stopping' || Boolean(state.busy && state.current === row.name);
+  act.setAttribute('aria-label', verb.label + ' ' + (row.label || row.name));
+  card.querySelector('.sc-open').setAttribute('aria-label', 'Open ' + (row.label || row.name));
+
+  const latest = row.status === 'running' ? row.latest : null;
+  if (latest && latest.players != null) setStat(card, 'players', String(latest.players), latest.maxPlayers != null ? '/ ' + latest.maxPlayers : '');
+  else setStat(card, 'players', '—');
+  setStat(card, 'tps', latest && latest.tps != null ? latest.tps.toFixed(1) : '—');
+  const ceiling = memoryCeilingMb(row.memory);
+  if (latest && Number.isFinite(latest.rss)) {
+    const gb = latest.rss >= 1024;
+    const allotted = ceiling ? '/ ' + gbOf(ceiling) + ' GB' : 'GB';
+    setStat(card, 'memory', gb ? (latest.rss / 1024).toFixed(1) : String(latest.rss), gb ? allotted : 'MB ' + allotted);
+  } else setStat(card, 'memory', '—');
+  const facts = overview.data && overview.data.servers[row.name];
+  if (!facts) setStat(card, 'backup', '…');
+  else if (facts.lastBackupAt == null) setStat(card, 'backup', 'Never', '', 'warn');
+  else {
+    const when = shortAgo(facts.lastBackupAt);
+    setStat(card, 'backup', when, when === 'now' ? '' : 'ago');
+  }
+
+  const note = cardNote(row);
+  const noteEl = card.querySelector('.sc-note');
+  noteEl.textContent = note.text;
+  if (note.tone) noteEl.dataset.tone = note.tone;
+  else delete noteEl.dataset.tone;
+}
+
+/** Keyed, like the tabs: a card is built once and its words changed in place on every poll. */
+function renderHomeCards() {
+  const box = $('#homeCards');
+  const seen = new Set();
+  state.rows.forEach((row, i) => {
+    seen.add(row.name);
+    let card = box.querySelector('.scard[data-name="' + CSS.escape(row.name) + '"]');
+    if (!card) card = buildHomeCard(row.name);
+    updateHomeCard(card, row);
+    if (box.children[i] !== card) box.insertBefore(card, box.children[i] || null);
+  });
+  for (const card of Array.from(box.children)) if (!seen.has(card.dataset.name)) card.remove();
+}
+
+$('#homeNew').onclick = () => openAdd('new');
 
 /**
  * How many polls in a row have failed. One is a blip. Three is the backend gone - the panel process
@@ -3605,13 +4091,13 @@ async function refresh() {
     stopStream();
     stopVitals();
     state.current = null;
-    if (state.view === 'server') show('empty');
+    if (state.view === 'server') showHome();
   }
   renderList(rows, dbs);
   renderJavaChip();
 
   if (!state.current) {
-    if (state.view === 'empty') renderEmptyFor(rows.concat(dbs));
+    if (state.view === 'empty' || state.view === 'home') showHome();
     return;
   }
   if (state.view === 'server') renderServer(rowOf(state.current));
@@ -3624,7 +4110,7 @@ setInterval(() => {
     const since = Number(el.dataset.since);
     if (!since) continue;
     const text = duration(Date.now() - since);
-    el.textContent = el.id === 'srvState' ? 'Running \u00b7 ' + text : text;
+    el.textContent = el.classList.contains('spill') ? 'Running \u00b7 ' + text : text;
   }
 }, 1000);
 
@@ -8984,7 +9470,7 @@ show('empty');
 loadSettings();
 loadJavas();
 refresh().then(() => {
-  renderEmptyFor(state.rows);
+  if (!state.current && (state.view === 'empty' || state.view === 'home')) showHome();
   // One server and nothing selected is not a choice worth making anyone click through.
   if (state.rows.length === 1) select(state.rows[0].name);
 });

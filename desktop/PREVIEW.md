@@ -18,6 +18,11 @@ Linux x64 packages all pass their native checks. Each release is immutable and n
   the two. Under each server's name are its players, TPS, memory and last backup, and Plugins can
   update everything it found in one go and restart. Please say which tool you wanted open beside
   the console and could not, and how it all fits at the smallest window size.
+- **An overview of every server (new in 1.4):** the grid tab at the left of the server tabs.
+  Each server's state, players, TPS, memory and last backup on one screen, with Start or Stop on
+  its card, and a "Needs attention" row for a crash, plugin updates a check found, a server with
+  no backups, or a missing Java - each with the one button that deals with it. Please say what
+  it flagged that you did not care about, and what it missed that you did.
 - **AI assistants change config files (new in 1.4):** ask your assistant to change a plugin
   setting. It lists, reads and edits the server's text config through `list_config_files`,
   `read_config_file` and `write_config_file`, snapshotting each file before it changes it.
