@@ -762,6 +762,22 @@ async function handlePlugins(req, res, name, seg, url) {
   if (verb === 'update') {
     return json(res, 200, await pluginActions.updateWithSnapshot(inst, body.file))
   }
+  // Every known update at once, behind one snapshot, reporting each step on the job stream.
+  // The restart that follows is the page's to ask for, through the route every restart uses.
+  if (verb === 'update-all') {
+    const files = Array.isArray(body.files) ? body.files.map(String).filter(Boolean) : []
+    if (!files.length) return json(res, 400, { error: 'files is required' })
+    const jobId = body.jobId ? String(body.jobId) : null
+    const out = await pluginActions.updateAllWithSnapshot(inst, files, {
+      onProgress: ({ file, index, total }) => jobUpdate(jobId, {
+        stage: 'update',
+        percent: Math.round((index / total) * 100),
+        message: `Updating ${file} (${index + 1} of ${total})`,
+      }),
+    })
+    jobUpdate(jobId, { stage: 'done', percent: 100, message: `Updated ${out.updated.length} of ${files.length}`, done: true })
+    return json(res, 200, out)
+  }
   return json(res, 404, { error: 'not found' })
 }
 
