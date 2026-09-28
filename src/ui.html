@@ -345,11 +345,17 @@
     The header, the server strip's tabs and the tool dock are the frame around the work, in
     --chrome, one step below the page so what is being worked on sits forward of it.
   */
+  /*
+    Everything in it starts 8px down, the tabs included, and the tabs fill the rest to the bottom
+    edge. That gives the logo, the tab names, + and the gear one centre line, while a tab can still
+    run down into the page under it - centring the rest in the full 52px left the tab names 8px
+    below everything beside them.
+  */
   header {
     display: flex;
     align-items: stretch;
     gap: var(--s-3);
-    padding: 0 var(--s-4) 0 var(--s-5);
+    padding: 8px var(--s-4) 0 var(--s-5);
     height: 52px;
     background: var(--chrome);
     border-bottom: 1px solid var(--line-soft);
@@ -387,7 +393,10 @@
     align-items: flex-end;
     gap: 2px;
     min-width: 0;
-    height: 100%;
+    /* One pixel over the header's bottom border, so the open tab covers it rather than being
+       clipped just above it by the sideways scroll. */
+    height: calc(100% + 1px);
+    margin-bottom: -1px;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
@@ -407,10 +416,11 @@
     align-items: center;
     gap: 8px;
     flex: none;
-    height: 38px;
+    height: 100%;
     max-width: 240px;
-    margin-bottom: -1px;
-    padding: 0 14px;
+    /* The 2px below balances the border above and the pixel the tab runs over the header's edge,
+       so the name sits on the same centre line as the logo and the buttons. */
+    padding: 0 14px 2px;
     background: transparent;
     border: 1px solid transparent;
     border-bottom: 0;
@@ -425,10 +435,9 @@
     border-color: var(--line-soft);
     color: var(--ink);
     font-weight: 600;
-    height: 39px;
   }
   .stab[aria-current="page"]:hover { background: var(--void); border-color: var(--line-soft); }
-  .stab-home { padding: 0 12px; }
+  .stab-home { padding: 0 12px 2px; }
   .stab-home .ico { width: 16px; height: 16px; }
   .stab .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .stab .note { font: var(--t-1)/1 var(--mono); color: var(--ink-3); white-space: nowrap; }
