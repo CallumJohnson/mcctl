@@ -15,55 +15,72 @@
      exists - so they cannot share a stylesheet without a build step, and there is no build step.
      Duplicated deliberately; change both or neither.
 
-     The two themes are one design in two colour schemes. Everything that is not a colour - radii,
-     shadows, blur, motion, type, spacing - is declared here once and never in a theme block, so a
-     theme cannot drift into being a different layout. Classic is the lapis scheme; SpawnLoft is
-     the website's lime. The interactive accent is separate from server state in both: the console
+     The two themes are one design in two colour schemes. Everything that is not a colour -
+     shadows, motion, type, spacing - is declared here once and never in a theme block, so a theme
+     cannot drift into being a different layout. The one exception is the four corner radii, which
+     SpawnLoft sharpens to match its website; they change how a corner looks, never where anything
+     sits. Classic is the lapis scheme; SpawnLoft is the website's lime. The interactive accent is separate from server state in both: the console
      already speaks that language - Paper writes INFO, WARN and ERROR - so status colours stay put.
      ========================================================================== */
   :root {
-    --void:     #07080d;
-    --surface:  #11141c;
-    --raised:   #181c27;
-    --sunken:   #090b10;
+    --void:     #0c0e14;
+    --surface:  #141823;
+    --raised:   #1c2130;
+    --sunken:   #0a0c12;
     /* Between void and surface: wells inside a card - the vitals strip, a chart, a form. */
-    --recess:   #0d1017;
+    --recess:   #11151f;
+    /* The header, the server tabs and the tool dock: the frame around the work, one step below
+       the page so the work sits forward of it. */
+    --chrome:   #0f121a;
     /* The border colour a danger control uses, named so it stops being pasted. */
-    --fault-edge: rgba(255, 107, 97, .32);
-    /* Hairlines. Translucent so they read the same over glass, over a row and over the page. */
-    --line:     rgba(255, 255, 255, .07);
-    --edge:     rgba(255, 255, 255, .13);
+    --fault-edge: #4a2529;
+    /* Three weights of rule. --line borders a card or a control; --line-soft divides the regions
+       of a screen; --line-faint separates rows inside a list or a form, where a full-strength
+       rule on every row turns the list into a grid. All solid: the planes they sit on are solid
+       too, so there is nothing for a translucent line to adapt to. */
+    --line:       #252b3b;
+    --line-soft:  #1f2433;
+    --line-faint: #191d29;
+    --edge:       #354056;
 
-    --ink:      #f3f5fa;
-    --ink-2:    #a9b0c2;
-    --ink-3:    #6d7589;
+    --ink:      #e9ecf4;
+    --ink-2:    #9aa4ba;
+    /* Lifted from #6d7589, which measured under 4.5:1 on --surface and is used for 12px text. */
+    --ink-3:    #8089a0;
+    /* Below the reading line on purpose: console timestamps, which are looked up, not read. */
+    --ink-4:    #545d72;
 
-    --lapis:     #6f8cff;
-    --lapis-dim: #3a4fa8;
-    --lapis-wash: rgba(111, 140, 255, .12);
+    --lapis:     #5b84ff;
+    --lapis-dim: #2c3f8f;
+    --lapis-wash: rgba(91, 132, 255, .14);
 
-    --live:  #3ddc84;
-    --warn:  #f5b84a;
-    --fault: #ff6b61;
-    --idle:  #6d7589;
+    --live:  #4ade80;
+    --warn:  #f0b64d;
+    --fault: #f2645c;
+    --idle:  #8089a0;
 
     --ui: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
     /* Headings and big numbers: the display cut of the same family, drawn for sizes above 20px. */
     --display: "Segoe UI Variable Display", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
     --mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", Menlo, monospace;
 
+    /* Corner radii. Classic keeps the rounder set; SpawnLoft redeclares these four and nothing
+       else that is not a colour, to match the sharper corners of the website it takes its
+       colours from. */
     --r: 12px;
     --r-sm: 8px;
+    --r-xs: 6px;
+    --r-lg: 16px;
 
     /* The lit top edge of a surface, as a colour - what --lift catches, for a gradient stop. */
-    --surface-hi: #151925;
+    --surface-hi: #171c2b;
 
     /* A one-pixel light edge along the top of a surface reads as it catching the light. */
-    --lift: inset 0 1px 0 rgba(255, 255, 255, .055);
-    --lift-strong: inset 0 1px 0 rgba(255, 255, 255, .09);
+    --lift: inset 0 1px 0 rgba(255, 255, 255, .045);
+    --lift-strong: inset 0 1px 0 rgba(255, 255, 255, .07);
 
     /* Green at the strength a background can take, behind a player who is connected. */
-    --live-wash:  rgba(61, 220, 132, .08);
+    --live-wash:  rgba(74, 222, 128, .09);
 
     /* The width of a lit edge: a scheduled task Windows has never heard of, a console level. */
     --spine: 3px;
@@ -86,123 +103,132 @@
     --s-6: 28px;
     --s-7: 40px;
 
-    --r-xs: 6px;
-    --r-lg: 16px;
-
-    /* Depth. Glass for the layers the eye should read as planes - the header, the server list,
-       the server card, a sheet, a dialog, a menu - and solid surfaces for everything inside them,
-       because blur on every row is expensive and reads as mush. */
-    --glass:        rgba(17, 20, 29, .66);
-    --glass-strong: rgba(23, 27, 38, .8);
-    --blur: blur(22px) saturate(150%);
-    --shadow-sm: inset 0 1px 0 rgba(255, 255, 255, .055), 0 1px 2px rgba(0, 0, 0, .35);
-    --shadow-md: inset 0 1px 0 rgba(255, 255, 255, .06), 0 1px 2px rgba(0, 0, 0, .35), 0 12px 32px -18px rgba(0, 0, 0, .7);
-    --shadow-lg: inset 0 1px 0 rgba(255, 255, 255, .08), 0 2px 6px rgba(0, 0, 0, .4), 0 28px 64px -20px rgba(0, 0, 0, .75);
+    /* Depth. Every plane is solid: the frame is --chrome, a sheet or dialog is --raised, and the
+       one-pixel --lift along the top says which is in front. Glass needs something behind it to
+       be glass, and behind the panel there is only a console and a form, so the blur bought
+       nothing and made small text on it softer. The names stay so a layer can still say what
+       it is. */
+    --glass:        var(--chrome);
+    --glass-strong: var(--raised);
+    --blur: none;
+    --shadow-sm: inset 0 1px 0 rgba(255, 255, 255, .045), 0 1px 2px rgba(0, 0, 0, .35);
+    --shadow-md: inset 0 1px 0 rgba(255, 255, 255, .05), 0 1px 2px rgba(0, 0, 0, .35), 0 12px 32px -18px rgba(0, 0, 0, .7);
+    --shadow-lg: inset 0 1px 0 rgba(255, 255, 255, .07), 0 2px 6px rgba(0, 0, 0, .4), 0 28px 64px -20px rgba(0, 0, 0, .75);
     /* Every hover in the panel moves at this speed. */
     --ease: 200ms ease-in-out;
 
     /* Tones: ink, edge and fill for each state colour, so a pill, a danger button, a notice and a
        banner draw from one place. A wash is translucent, for text on the page; a fill is solid,
        for a control that needs an opaque body. */
-    --live-ink:   #a7f3c9;
-    --live-edge:  rgba(61, 220, 132, .3);
-    --live-fill:  rgba(61, 220, 132, .1);
-    --warn-ink:   #f8d58f;
-    --warn-edge:  rgba(245, 184, 74, .32);
-    --warn-wash:  rgba(245, 184, 74, .1);
-    --fault-ink:  #ffaaa4;
-    --fault-fill: rgba(255, 107, 97, .1);
-    --fault-wash: rgba(255, 107, 97, .1);
-    --lapis-ink:  #c9d5ff;
-    --lapis-edge: rgba(111, 140, 255, .38);
-    --lapis-fill: rgba(111, 140, 255, .12);
+    --live-ink:   #9ff0c4;
+    --live-edge:  rgba(74, 222, 128, .3);
+    --live-fill:  rgba(74, 222, 128, .12);
+    --warn-ink:   #f4cd86;
+    --warn-edge:  rgba(240, 182, 77, .32);
+    --warn-wash:  rgba(240, 182, 77, .11);
+    --fault-ink:  #f7a49f;
+    --fault-fill: #2b1719;
+    --fault-wash: rgba(242, 100, 92, .11);
+    --lapis-ink:  #cdd9ff;
+    /* Also the border of a field whose value has been changed and not yet saved. */
+    --lapis-edge: #3d55b8;
+    --lapis-fill: rgba(91, 132, 255, .12);
 
-    --raised-hi: #1d2230;
-    --hover:     rgba(255, 255, 255, .05);
-    --accent-rgb: 111, 140, 255;
-    --ink-rgb: 243, 245, 250;
-    --scroll-thumb: rgba(255, 255, 255, .1);
-    --scroll-hover: rgba(255, 255, 255, .18);
-    --hover-hi: rgba(255, 255, 255, .08);
-    --primary-top: #7a93ff;
-    --primary-bottom: #5572f0;
-    --primary-edge: rgba(255, 255, 255, .16);
-    --primary-ink: #ffffff;
-    --primary-hover-top: #8aa0ff;
-    --primary-hover-bottom: #6480f5;
-    --setup-primary-fill: #5f7bf4;
-    --setup-primary-edge: rgba(255, 255, 255, .16);
-    --setup-primary-ink: #ffffff;
-    --setup-primary-hover: #6d88fa;
-    --field-focus: #0b0e15;
-    --segment-top: rgba(255, 255, 255, .09);
-    --segment-bottom: rgba(255, 255, 255, .06);
-    --door-hover: #1b2030;
-    --switch-top: #7a93ff;
-    --choice-top: #7a93ff;
-    --control-mark: #ffffff;
-    --console-ink: #c9d0de;
-    --dialog-backdrop: rgba(4, 5, 9, .62);
-    --cube-top: #7f9bff;
-    --cube-left: #4a65d6;
-    --cube-right: #2c3f96;
-    --cube-cutout: #dbe5ff;
-    --chart-cpu: #7f9bff;
+    --raised-hi: #212737;
+    --hover:     rgba(233, 236, 244, .05);
+    --accent-rgb: 91, 132, 255;
+    --ink-rgb: 233, 236, 244;
+    --scroll-thumb: #2a3145;
+    --scroll-hover: #3a4560;
+    --hover-hi: rgba(233, 236, 244, .08);
+    /* The primary button is one flat colour. Top and bottom stay separate names so a theme can
+       bring a gradient back without touching a component. */
+    --primary-top: #4360d4;
+    --primary-bottom: #4360d4;
+    --primary-edge: #4360d4;
+    --primary-ink: #eef2ff;
+    --primary-hover-top: #4d6ae6;
+    --primary-hover-bottom: #4d6ae6;
+    --setup-primary-fill: #4360d4;
+    --setup-primary-edge: #4360d4;
+    --setup-primary-ink: #eef2ff;
+    --setup-primary-hover: #4d6ae6;
+    --field-focus: #0d1119;
+    --segment-top: #1c2130;
+    --segment-bottom: #1c2130;
+    --door-hover: #212739;
+    --switch-top: #4360d4;
+    --choice-top: #4360d4;
+    --control-mark: #eef2ff;
+    --console-ink: #cfd6e4;
+    --dialog-backdrop: rgba(6, 8, 12, .6);
+    --cube-top: #5f85ef;
+    --cube-left: #3a55b4;
+    --cube-right: #24357a;
+    --cube-cutout: #cfe0ff;
+    --chart-cpu: #7aa2ff;
   }
 
-  /* The same design in the website's colours. Only colours may appear in this block. */
+  /* The same design in the website's colours. Only colours and the four corner radii may appear
+     in this block. */
   :root[data-theme="spawnloft"] {
-    --void: #060907;
-    --surface: #111711;
-    --raised: #182018;
-    --sunken: #070a07;
-    --recess: #0c110c;
-    --line: rgba(236, 245, 220, .07);
-    --edge: rgba(236, 245, 220, .13);
-    --ink: #f1f2ea;
-    --ink-2: #b3bba8;
-    --ink-3: #7d8872;
-    --idle: #7d8872;
+    --void: #090d0d;
+    --surface: #141b15;
+    --raised: #1e271d;
+    --sunken: #080c09;
+    --recess: #101610;
+    --chrome: #0c110d;
+    --line: #30382e;
+    --line-soft: #252c24;
+    --line-faint: #1d241c;
+    --edge: #485541;
+    --ink: #efeee6;
+    --ink-2: #b5bcac;
+    --ink-3: #909a86;
+    --ink-4: #5f6a58;
+    --idle: #909a86;
     --lapis: #c4f566;
-    --lapis-dim: #5e7a2e;
-    --lapis-wash: rgba(196, 245, 102, .11);
-    --lapis-ink: #e0f7b8;
-    --lapis-edge: rgba(196, 245, 102, .36);
+    --lapis-dim: #546e2a;
+    --lapis-wash: rgba(196, 245, 102, .12);
+    --lapis-ink: #dbf4b2;
+    --lapis-edge: #7a9a45;
     --lapis-fill: rgba(196, 245, 102, .1);
-    --surface-hi: #151c15;
-    --raised-hi: #1e281d;
-    --hover: rgba(236, 245, 220, .05);
+    --surface-hi: #19211a;
+    --raised-hi: #263021;
+    --hover: rgba(239, 238, 230, .05);
     --accent-rgb: 196, 245, 102;
-    --ink-rgb: 241, 242, 234;
-    --scroll-thumb: rgba(236, 245, 220, .1);
-    --scroll-hover: rgba(236, 245, 220, .18);
-    --hover-hi: rgba(236, 245, 220, .08);
-    --primary-top: #d0f97f;
-    --primary-bottom: #b3e453;
-    --primary-edge: rgba(255, 255, 255, .22);
-    --primary-ink: #142009;
-    --primary-hover-top: #dcff94;
-    --primary-hover-bottom: #c4f566;
+    --ink-rgb: 239, 238, 230;
+    --scroll-thumb: #394431;
+    --scroll-hover: #536348;
+    --hover-hi: rgba(239, 238, 230, .08);
+    --primary-top: #c4f566;
+    --primary-bottom: #c4f566;
+    --primary-edge: #c4f566;
+    --primary-ink: #14200b;
+    --primary-hover-top: #d3ff80;
+    --primary-hover-bottom: #d3ff80;
     --setup-primary-fill: #c4f566;
-    --setup-primary-edge: rgba(255, 255, 255, .22);
-    --setup-primary-ink: #142009;
+    --setup-primary-edge: #c4f566;
+    --setup-primary-ink: #14200b;
     --setup-primary-hover: #d3ff80;
-    --field-focus: #0a0f0a;
-    --segment-top: rgba(236, 245, 220, .09);
-    --segment-bottom: rgba(236, 245, 220, .06);
-    --door-hover: #1a2219;
-    --switch-top: #d0f97f;
-    --choice-top: #d0f97f;
-    --control-mark: #142009;
-    --console-ink: #d9dccf;
-    --dialog-backdrop: rgba(3, 6, 3, .66);
+    --field-focus: #11180f;
+    --segment-top: #1e271d;
+    --segment-bottom: #1e271d;
+    --door-hover: #293424;
+    --switch-top: #c4f566;
+    --choice-top: #c4f566;
+    --control-mark: #14200b;
+    --console-ink: #dedfd3;
+    --dialog-backdrop: rgba(4, 8, 5, .7);
     --cube-top: #c4f566;
     --cube-left: #8bb640;
     --cube-right: #567c24;
     --cube-cutout: #efffdc;
     --chart-cpu: #c4f566;
-    --glass: rgba(15, 21, 15, .66);
-    --glass-strong: rgba(21, 28, 20, .8);
+    --r: 10px;
+    --r-sm: 6px;
+    --r-xs: 4px;
+    --r-lg: 12px;
   }
 
   :root[data-theme="spawnloft"] ::selection { background: var(--lapis); color: var(--void); }
@@ -229,8 +255,8 @@
   .theme-option strong { font-size: var(--t-3); font-weight: 600; }
   .theme-option small { margin-top: 3px; color: var(--ink-2); font-size: var(--t-2); line-height: 1.4; }
   .theme-preview { position: relative; display: block; width: 64px; height: 42px; overflow: hidden; border: 1px solid var(--preview-edge); border-radius: 6px; background: var(--preview-bg); }
-  .theme-preview-classic { --preview-bg: #07080d; --preview-edge: #2a3042; --preview-surface: #181c27; --preview-accent: #6f8cff; }
-  .theme-preview-spawnloft { --preview-bg: #060907; --preview-edge: #2c3528; --preview-surface: #182018; --preview-accent: #c4f566; }
+  .theme-preview-classic { --preview-bg: #0c0e14; --preview-edge: #354056; --preview-surface: #1c2130; --preview-accent: #5b84ff; }
+  .theme-preview-spawnloft { --preview-bg: #090d0d; --preview-edge: #485541; --preview-surface: #1e271d; --preview-accent: #c4f566; }
   .theme-preview i { position: absolute; display: block; background: var(--preview-surface); border-radius: 2px; }
   .theme-preview i:nth-child(1) { inset: 0 0 auto; height: 8px; border-bottom: 1px solid var(--preview-edge); border-radius: 0; }
   .theme-preview i:nth-child(2) { left: 4px; top: 12px; width: 14px; bottom: 4px; }
@@ -281,12 +307,9 @@
   html, body { height: 100%; }
   body {
     margin: 0;
-    /* The glass needs something behind it to be glass: two soft accent glows, one high on the
-       left and one low on the right, which the blurred planes pick up as tint. */
-    background:
-      radial-gradient(1000px 560px at 12% -14%, rgba(var(--accent-rgb), .14), transparent 62%),
-      radial-gradient(900px 620px at 104% 118%, rgba(var(--accent-rgb), .07), transparent 60%),
-      var(--void);
+    /* Plain. The accent is kept for things that can be clicked, so tinting the page with it
+       would make everything look slightly pressable. */
+    background: var(--void);
     color: var(--ink);
     font: var(--t-4)/1.5 var(--ui);
     letter-spacing: .003em;

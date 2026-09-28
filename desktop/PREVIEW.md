@@ -6,10 +6,11 @@ Linux x64 packages all pass their native checks. Each release is immutable and n
 
 ### Fixes to try
 
-- **A redesigned panel (new in 1.4):** glass layers, a dense backups table, compact
-  Performance widgets and hover states throughout, the same in both themes. Only the look
-  changed. Please say where anything reads worse than before, especially at the smallest
-  window size and on a slower machine, where the blur costs the most.
+- **A redesigned panel (new in 1.4):** solid surfaces in place of the frosted glass, new
+  colours in both themes, a dense backups table, compact Performance widgets and hover states
+  throughout. Classic's faintest text is brighter, and SpawnLoft has its sharper corners back.
+  Only the look changed. Please say where anything reads worse than before, especially small
+  grey text and the smallest window size.
 - **AI assistants change config files (new in 1.4):** ask your assistant to change a plugin
   setting. It lists, reads and edits the server's text config through `list_config_files`,
   `read_config_file` and `write_config_file`, snapshotting each file before it changes it.
