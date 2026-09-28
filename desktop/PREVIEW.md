@@ -23,6 +23,12 @@ Linux x64 packages all pass their native checks. Each release is immutable and n
   its card, and a "Needs attention" row for a crash, plugin updates a check found, a server with
   no backups, or a missing Java - each with the one button that deals with it. Please say what
   it flagged that you did not care about, and what it missed that you did.
+- **Server settings as one form (new in 1.4):** a server's Settings list their sections down the
+  side, with a dot on any holding an unsaved change. Each setting says Default until the file has
+  it and Changed until it is saved, and the bar at the bottom saves, discards, or saves and
+  restarts. Memory is set here now, beside Java, and server.properties can be edited whole, with
+  the RCON password kept hidden and the file snapshotted first. Please try an edit in the whole
+  file, and say which setting you looked for in the form and did not find.
 - **AI assistants change config files (new in 1.4):** ask your assistant to change a plugin
   setting. It lists, reads and edits the server's text config through `list_config_files`,
   `read_config_file` and `write_config_file`, snapshotting each file before it changes it.
