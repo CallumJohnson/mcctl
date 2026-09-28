@@ -2,6 +2,7 @@ import path from 'node:path'
 import { getInstance, isDatabase, loadRegistry } from './registry.mjs'
 import * as sup from './supervisor.mjs'
 import { rconExec, stripColors } from './rcon.mjs'
+import { readTick } from './tick.mjs'
 import * as backup from './backup.mjs'
 import * as plugins from './plugins.mjs'
 import * as pluginActions from './plugin-actions.mjs'
@@ -173,18 +174,12 @@ const readTools = [
       const avg = (a) => (a.length ? Math.round((a.reduce((x, y) => x + y, 0) / a.length) * 10) / 10 : null)
       const summary = { samples: m.samples.length, cpuAvg: avg(cpu), cpuMax: cpu.length ? Math.max(...cpu) : null,
         cpuLast: cpu.at(-1) ?? null, memoryMiBLast: rss.at(-1) ?? null, memoryMiBMax: rss.length ? Math.max(...rss) : null }
-      const tick = {}
+      let tick = {}
       if (!isDatabase(inst) && sup.isRunning(n)) {
         // Paper answers tps and mspt; vanilla and Fabric answer tick query. Whatever the server does
-        // not know comes back as an unknown-command line and is left out.
-        for (const cmd of ['tps', 'mspt', 'tick query']) {
-          try {
-            const [reply] = await rconExec(inst, [cmd])
-            const text = stripColors(reply ?? '').trim()
-            if (text && !/unknown|incorrect argument|<--\[HERE\]/i.test(text)) tick[cmd] = text
-          } catch { /* RCON unavailable: the machine-side numbers still stand */ }
-          if (cmd === 'mspt' && tick.tps) break
-        }
+        // not know comes back as an unknown-command line and is left out. The same reader the
+        // daemon uses for the panel, so the two cannot disagree about what a reply means.
+        tick = (await readTick(async (cmd) => (await rconExec(inst, [cmd]))[0])).replies
       }
       const data = { name: n, running: m.running, windowSeconds: seconds, cores: m.cores, cpuScale: m.cpuScale,
         samplingAvailable: m.samplingAvailable, summary, tick, recent: m.samples.slice(-30) }

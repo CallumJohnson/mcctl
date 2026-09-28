@@ -355,6 +355,8 @@ export function statusOf(name) {
     daemonPid: state?.daemonPid ?? null,
     startedAt: state?.startedAt ?? null,
     exitCode: state?.exitCode ?? null,
+    // True once the last run ended in a crash nobody asked for; the next start clears it.
+    crashed: Boolean(state?.crashed),
     lastError: state?.error ?? null,
     uptimeMs: status === 'running' && state?.startedAt ? Date.now() - state.startedAt : null,
     stateFile: stateFile(name),

@@ -19,6 +19,7 @@ import { getInstance, serverJarPath, jvmFlagsFor, isDatabase, kindOf } from './r
 import { runDir, stateFile, consoleLog, daemonLog, controlPath } from './paths.mjs'
 import { writeJson, killProcessGroup } from './util.mjs'
 import { startSampler, metricsFile } from './metrics.mjs'
+import { startTickSampler } from './tick.mjs'
 import { crashVerdict, CRASH_LIMIT, CRASH_WINDOW_MS } from './crashguard.mjs'
 import { notifyInstance } from './notify.mjs'
 import { diagnose } from './diagnose.mjs'
@@ -93,6 +94,7 @@ let stopping = false
 let stopSent = false
 let respawnTimer = null
 let stopSampler = () => {}
+let ticks = { latest: () => null, stop: () => {} }
 let recent = ''
 const stopWaiters = []
 const crashes = []
@@ -230,8 +232,14 @@ function launch({ first }) {
   }
   // A graph is worth less than the thing it graphs, so a sampler that cannot start says so in the
   // daemon log and the server carries on without one.
+  // TPS and who is on come from the server itself, over RCON, and ride along with each sample.
+  // A database has neither.
+  ticks = isDatabase(inst) ? { latest: () => null, stop: () => {} } : startTickSampler(inst, {
+    onError: (err) => log(`tick and player readings unavailable: ${err.message}`),
+  })
   stopSampler = startSampler(name, child.pid, {
     onError: (err) => log(`performance sampling unavailable: ${err.message}`),
+    extra: () => ticks.latest(),
   })
 
   child.on('exit', (code, signal) => onExit(code, signal))
@@ -270,10 +278,15 @@ function shutDown(code, signal, error) {
 function onExit(code, signal) {
   log(`java exited code=${code} signal=${signal}`)
   stopSampler()
+  ticks.stop()
   out.write(`\n[mcctl] server process exited (code=${code}${signal ? `, signal=${signal}` : ''})\n`)
 
   const crashed = (code !== 0 && code !== null) || Boolean(signal)
   if (crashed && !stopping) crashes.push(Date.now())
+  // Said in the state, so the panel can tell a server that crashed from one somebody stopped - an
+  // exit code alone cannot, because a forced stop exits non-zero too. The next launch writes a
+  // fresh state and clears it.
+  state.crashed = crashed && !stopping
 
   // Name the likely cause while the evidence is at hand. One finding, in the console and on
   // the webhook - a person woken by "crashed" should not have to open a log to learn "out of

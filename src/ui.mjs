@@ -1318,6 +1318,12 @@ async function route(req, res) {
       // a credential that is not sent cannot be read out of a browser cache or a screenshot.
       return safeInstance(row)
     })
+    // The newest reading of each running server - players, TPS, memory - for its tab and its
+    // header. Read from the end of each file, together, so the list costs one small read per
+    // running server rather than a history each.
+    await Promise.all(rows.map(async (row) => {
+      row.latest = row.status === 'running' ? await metrics.latestSample(row.name) : null
+    }))
     return json(res, 200, rows)
   }
 
