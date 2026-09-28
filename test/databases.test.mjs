@@ -90,8 +90,8 @@ test('a second create with the same name, or on the server side, is refused', as
   assert.ok(isDatabase(services.getDatabase(DB)))
 })
 
-test('attach before the database runs is refused with the way out', () => {
-  assert.throws(() => services.attach(DB, SRV), /start it first/)
+test('attach before the database runs is refused with the way out', async () => {
+  await assert.rejects(services.attach(DB, SRV), /start it first/)
 })
 
 test('start waits for the engine to report ready, over stderr, without a jar, EULA or Java', { timeout: 30000 }, async () => {
@@ -105,8 +105,8 @@ test('start waits for the engine to report ready, over stderr, without a jar, EU
   await assert.rejects(sup.sendConsole(DB, 'hello'), /no console input/)
 })
 
-test('attach creates the database and user for the server, and the credentials come back', () => {
-  const creds = services.attach(DB, SRV)
+test('attach creates the database and user for the server, and the credentials come back', async () => {
+  const creds = await services.attach(DB, SRV)
   assert.equal(creds.database, SRV)
   assert.equal(creds.user, SRV)
   assert.equal(creds.host, '127.0.0.1')
@@ -119,7 +119,7 @@ test('attach creates the database and user for the server, and the credentials c
   assert.ok(log.includes(`IDENTIFIED BY '${creds.password}'`))
 
   // Again: the same credentials, not new ones.
-  assert.deepEqual(services.attach(DB, SRV), creds)
+  assert.deepEqual(await services.attach(DB, SRV), creds)
   assert.deepEqual(services.credentials(DB, SRV), creds)
 
   const fromServer = services.serverAttachments(SRV)
@@ -156,17 +156,17 @@ test('both CLI launchers start, restart, and detach a database without treating 
   }
 })
 
-test('detach and reattach preserve manual plugin configs, including legacy attachment metadata', () => {
+test('detach and reattach preserve manual plugin configs, including legacy attachment metadata', async () => {
   const db = services.getDatabase(DB)
   const applied = { luckperms: { file: 'plugins/LuckPerms/config.yml', at: '2026-01-01T00:00:00Z' } }
   updateInstance(DB, { attachments: { ...db.attachments, [SRV]: { ...db.attachments[SRV], applied } } })
   const before = services.credentials(DB, SRV)
-  assert.deepEqual(services.attach(DB, SRV), before)
+  assert.deepEqual(await services.attach(DB, SRV), before)
   assert.equal(services.serverAttachments(SRV)[0].applied, undefined)
   assertManualConfigs()
-  services.detach(DB, SRV)
+  await services.detach(DB, SRV)
   assertManualConfigs()
-  assert.ok(services.attach(DB, SRV).password)
+  assert.ok((await services.attach(DB, SRV)).password)
   assertManualConfigs()
 })
 
@@ -297,9 +297,9 @@ test('with the database stopped, a snapshot still succeeds and says what it lack
   fs.rmSync(path.join(srv.dir, 'databases'), { recursive: true, force: true })
 })
 
-test('detach while stopped keeps the record consistent, and dropping needs the database up', () => {
-  assert.throws(() => services.detach(DB, SRV, { drop: true }), /not running/)
-  const res = services.detach(DB, SRV)
+test('detach while stopped keeps the record consistent, and dropping needs the database up', async () => {
+  await assert.rejects(services.detach(DB, SRV, { drop: true }), /not running/)
+  const res = await services.detach(DB, SRV)
   assert.equal(res.dropped, false)
   assert.deepEqual(services.serverAttachments(SRV), [])
   assert.throws(() => services.credentials(DB, SRV), /not attached/)

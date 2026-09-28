@@ -1308,11 +1308,11 @@ async function route(req, res) {
     const body = await readBody(req)
     if (seg[3] === 'attach') {
       if (!body.server) return json(res, 400, { error: 'server is required' })
-      return json(res, 200, services.attach(db, String(body.server)))
+      return json(res, 200, await services.attach(db, String(body.server)))
     }
     if (seg[3] === 'detach') {
       if (!body.server) return json(res, 400, { error: 'server is required' })
-      return json(res, 200, services.detach(db, String(body.server), { drop: body.drop === true }))
+      return json(res, 200, await services.detach(db, String(body.server), { drop: body.drop === true }))
     }
     if (seg[3] === 'delete') {
       return json(res, 200, services.removeDatabase(db, { purge: body.purge === true }))

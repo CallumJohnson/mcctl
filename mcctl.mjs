@@ -1562,13 +1562,13 @@ async function cmdDb(positional, flags) {
     const [, dbName, serverName] = positional
     if (!dbName || !serverName) fail(`usage: mcctl db ${sub} <database> <server>${sub === 'detach' ? ' [--drop]' : ''}`)
     if (sub === 'attach') {
-      const creds = services.attach(dbName, serverName)
+      const creds = await services.attach(dbName, serverName)
       out(`"${serverName}" is attached to "${dbName}".`)
       out('')
       printCredentials(creds)
       return
     }
-    const res = services.detach(dbName, serverName, { drop: Boolean(flags.drop) })
+    const res = await services.detach(dbName, serverName, { drop: Boolean(flags.drop) })
     out(`"${serverName}" is detached from "${dbName}"${res.dropped ? `; database ${res.database} dropped` : `; database ${res.database} kept`}.`)
     return
   }

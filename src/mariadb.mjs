@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
-import { spawn, spawnSync } from 'node:child_process'
+import { spawn, spawnSync, execFile } from 'node:child_process'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 
@@ -399,8 +399,15 @@ export function quoteStr(s) {
   return "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "''") + "'"
 }
 
-/** Run statements as root over TCP. Returns stdout; a refusal names the reason. */
-export function sql(inst, statements) {
+/**
+ * Run statements as root over TCP. Resolves to stdout; a refusal names the reason.
+ *
+ * <p>Asynchronous, because the panel calls it: attaching a server to a database it has just created
+ * runs this inside the panel's one process. Run with spawnSync, the client's first launch - which
+ * Defender scans on a fresh machine - held the panel's event loop for over five seconds, and the
+ * panel's own requests timed out behind it (the Windows smoke test's MySQL step, three times).
+ */
+export async function sql(inst, statements) {
   const dir = toolsDir(inst)
   const client = binary(dir, 'client')
   if (!client) {
@@ -411,10 +418,17 @@ export function sql(inst, statements) {
   const { cmd, args, env } = runnable(client,
     [...rootArgs(inst), '--batch', '--skip-column-names', '--execute', statements],
     { ...process.env, MYSQL_PWD: inst.root?.password ?? '' })
-  const res = spawnSync(cmd, args, { encoding: 'utf8', windowsHide: true, timeout: 60000, env })
-  if (res.error) fail(`could not run the MariaDB client: ${res.error.message}`)
-  if (res.status !== 0) fail(`MariaDB refused: ${(res.stderr || res.stdout || `exit ${res.status}`).trim()}`)
-  return res.stdout ?? ''
+  const { error, stdout, stderr } = await new Promise((resolve) => {
+    execFile(cmd, args, { encoding: 'utf8', windowsHide: true, timeout: 60000, env, maxBuffer: 16 * 1024 * 1024 },
+      (err, out, errOut) => resolve({ error: err, stdout: out, stderr: errOut }))
+  })
+  // A number is the client's exit code: it ran and said no. Anything else is that it could not
+  // be run at all, or was stopped for taking longer than a minute.
+  if (error && typeof error.code !== 'number') {
+    fail(`could not run the MariaDB client: ${error.killed ? 'it did not answer within a minute' : error.message}`)
+  }
+  if (error) fail(`MariaDB refused: ${(stderr || stdout || `exit ${error.code}`).trim()}`)
+  return stdout ?? ''
 }
 
 /**
@@ -507,7 +521,7 @@ export async function importSql(inst, file) {
 
 /** Is it answering? One statement as root; a refusal is the reason. */
 export async function probe(inst) {
-  sql(inst, 'SELECT 1;')
+  await sql(inst, 'SELECT 1;')
   return true
 }
 
@@ -515,13 +529,13 @@ export function newRecord(serverName) {
   return { database: serverName, user: serverName, password: randomPassword(24), createdAt: new Date().toISOString() }
 }
 
-export function provision(inst, record) {
-  sql(inst, attachSql(record))
+export async function provision(inst, record) {
+  await sql(inst, attachSql(record))
   return { provisioned: true }
 }
 
-export function deprovision(inst, record, { drop = false } = {}) {
-  sql(inst, detachSql({ database: record.database, user: record.user, drop }))
+export async function deprovision(inst, record, { drop = false } = {}) {
+  await sql(inst, detachSql({ database: record.database, user: record.user, drop }))
   return { deprovisioned: true, dropped: drop }
 }
 
