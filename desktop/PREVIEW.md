@@ -11,6 +11,13 @@ Linux x64 packages all pass their native checks. Each release is immutable and n
   throughout. Classic's faintest text is brighter, and SpawnLoft has its sharper corners back.
   Only the look changed. Please say where anything reads worse than before, especially small
   grey text and the smallest window size.
+- **The console stays on screen (new in 1.4):** servers are tabs across the top, and a server's
+  tools - Plugins, Worlds, Backups, Players, Stats, Schedule, Settings - open from a dock on the
+  right, beside the console instead of in place of it. Settings and Backups open full width with
+  the console's newest line along the bottom; the button at the top of any tool swaps between
+  the two. Under each server's name are its players, TPS, memory and last backup, and Plugins can
+  update everything it found in one go and restart. Please say which tool you wanted open beside
+  the console and could not, and how it all fits at the smallest window size.
 - **AI assistants change config files (new in 1.4):** ask your assistant to change a plugin
   setting. It lists, reads and edits the server's text config through `list_config_files`,
   `read_config_file` and `write_config_file`, snapshotting each file before it changes it.

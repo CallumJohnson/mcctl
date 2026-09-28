@@ -339,121 +339,128 @@
      losing the caret is losing your place. */
   :focus-visible { outline: 2px solid var(--lapis); outline-offset: 2px; border-radius: 4px; }
 
-  /* ---- header rail ------------------------------------------------------ */
+  /* ---- the frame: header, server tabs --------------------------------------- */
 
+  /*
+    The header, the server strip's tabs and the tool dock are the frame around the work, in
+    --chrome, one step below the page so what is being worked on sits forward of it.
+  */
   header {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 var(--s-5);
+    align-items: stretch;
+    gap: var(--s-3);
+    padding: 0 var(--s-4) 0 var(--s-5);
     height: 52px;
-    background: var(--glass);
-    backdrop-filter: var(--blur);
-    -webkit-backdrop-filter: var(--blur);
-    border-bottom: 1px solid var(--line);
+    background: var(--chrome);
+    border-bottom: 1px solid var(--line-soft);
     position: relative;
     z-index: 5;
   }
-  .brand { display: flex; align-items: center; gap: 10px; }
+  header > .brand, header > button { align-self: center; }
+  .brand { display: flex; align-items: center; gap: 10px; flex: none; }
   .brand svg { display: block; }
   .brand b { font: 650 var(--t-4)/1 var(--display); letter-spacing: -.015em; }
-  .rootchip {
-    font: var(--t-1)/1 var(--mono);
-    color: var(--ink-3);
-    background: rgba(var(--ink-rgb), .025);
-    border: 1px solid var(--line);
-    border-radius: var(--r-xs);
-    padding: 5px 9px;
-    max-width: 340px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
   .grow { flex: 1; }
-  .ver { font: var(--t-1)/1 var(--mono); color: var(--ink-3); }
 
-  /* ---- layout ----------------------------------------------------------- */
-
-  main {
-    display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
-    gap: var(--s-4);
-    padding: var(--s-4);
-    min-height: 0;
+  /* A button that is only a glyph. Every one of them carries an aria-label saying what it does. */
+  button.icon-btn {
+    justify-content: center;
+    width: 32px; height: 32px;
+    padding: 0;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--ink-2);
   }
-  .sidebar { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: var(--s-3); min-height: 0; }
+  button.icon-btn .ico { width: 16px; height: 16px; }
+  button.icon-btn:hover:not(:disabled) { background: var(--hover); border-color: var(--line); color: var(--ink); transform: none; }
+  button.icon-btn[aria-pressed="true"], button.icon-btn[aria-expanded="true"] { background: var(--raised); border-color: var(--line); color: var(--ink); }
 
-  /* With nothing registered there is no list, so there is no list to show. The first screen a
-     stranger sees is one thing asking one question rather than a panel of empty furniture. */
-  body.bare main { grid-template-columns: minmax(0, 1fr); }
-  body.bare .sidebar { display: none; }
-
-  .panel {
-    background: var(--glass);
-    backdrop-filter: var(--blur);
-    -webkit-backdrop-filter: var(--blur);
-    border: 1px solid var(--line);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-md);
-    min-height: 0;
+  .srv-tabs { flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: var(--s-1); margin-left: var(--s-3); }
+  .srv-tabs > .icon-btn { align-self: center; flex: none; }
+  /*
+    Sideways only, and faded at whichever edge has more beyond it, so a strip that has run out of
+    room says so rather than cutting a name in half with no sign there is anything after it.
+  */
+  .tabs-scroll {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    min-width: 0;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
   }
-  .panel > h2 {
+  .tabs-scroll::-webkit-scrollbar { height: 0; }
+  .tabs-scroll.fade-r { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent); }
+  .tabs-scroll.fade-l { -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px); mask-image: linear-gradient(90deg, transparent, #000 40px); }
+  .tabs-scroll.fade-l.fade-r { -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
+
+  /*
+    A tab. The one that is open is drawn joined to the page under it - the page's colour, borders
+    on three sides and none along the bottom - so it reads as the top of the screen below rather
+    than as a button that happens to be lit.
+  */
+  .stab {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 0;
-    padding: 14px 16px 10px;
-    font: 650 var(--t-1)/1 var(--ui);
-    text-transform: uppercase;
-    letter-spacing: .09em;
-    color: var(--ink-3);
-  }
-  .panel > h2 .n { font: 500 var(--t-1)/1 var(--mono); letter-spacing: 0; color: var(--ink-3); }
-  .sidebar .panel { display: grid; grid-template-rows: auto minmax(0, 1fr); }
-
-  /* ---- server cards ----------------------------------------------------- */
-
-  #list { overflow-y: auto; min-height: 0; padding: 2px var(--s-2) var(--s-2); display: grid; gap: 2px; align-content: start; }
-
-  /*
-    One row per server: a lamp, a name, and a line of vitals. Quiet until pointed at, lifted onto
-    its own surface when selected - the selection is the one place in the list that should read as
-    a raised object rather than as text.
-  */
-  .card {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 2px 12px;
-    width: 100%;
-    text-align: left;
+    flex: none;
+    height: 38px;
+    max-width: 240px;
+    margin-bottom: -1px;
+    padding: 0 14px;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: var(--r-sm);
-    padding: 10px 12px;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
+    border-bottom: 0;
+    border-radius: var(--r-sm) var(--r-sm) 0 0;
     box-shadow: none;
-    transition: all var(--ease);
+    color: var(--ink-2);
+    font: 500 var(--t-3)/1 var(--ui);
   }
-  .card:hover { background: var(--hover); border-color: var(--line); }
-  .card[aria-current="true"] {
-    background: var(--raised);
-    border-color: var(--edge);
-    box-shadow: var(--shadow-sm);
+  .stab:hover:not(:disabled) { background: var(--hover); color: var(--ink); transform: none; border-color: transparent; }
+  .stab[aria-current="page"] {
+    background: var(--void);
+    border-color: var(--line-soft);
+    color: var(--ink);
+    font-weight: 600;
+    height: 39px;
   }
-  .card[data-status="orphaned"]:not([aria-current="true"]),
-  .card[data-status="unknown"]:not([aria-current="true"]) { border-color: var(--fault-edge); }
-  .card .lamp { grid-row: 1 / 3; align-self: center; }
-  .card .nm { font: 600 var(--t-3)/1.35 var(--ui); letter-spacing: -.005em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .card .vitals {
-    font: var(--t-1)/1.45 var(--mono);
-    color: var(--ink-3);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .stab[aria-current="page"]:hover { background: var(--void); border-color: var(--line-soft); }
+  .stab-home { padding: 0 12px; }
+  .stab-home .ico { width: 16px; height: 16px; }
+  .stab .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .stab .note { font: var(--t-1)/1 var(--mono); color: var(--ink-3); white-space: nowrap; }
+  .stab .note:empty { display: none; }
+  .stab .note[data-tone="fault"] { font-family: var(--ui); color: var(--fault-ink); }
+  .stab[data-kind="database"] .nm::after { content: 'DB'; margin-left: 6px; padding: 1px 5px; border-radius: 999px; background: var(--lapis-wash); border: 1px solid var(--lapis-edge); color: var(--lapis-ink); font-size: 10px; font-weight: 650; letter-spacing: .04em; vertical-align: 1px; }
+  /* Between the servers and the databases, a hairline rather than a heading: a tab strip has no
+     room for a word it would have to repeat on every screen. */
+  .tabs-div { flex: none; width: 1px; height: 18px; margin: 0 6px 10px; background: var(--line); }
+
+  /*
+    Java, when it is missing or too old: a chip rather than a banner across the page. It is a
+    condition, not an event, so it stays until it is fixed - but it does not need the full width to
+    say "Java 25", and the full sentence is its accessible name.
+  */
+  .java-chip {
+    gap: 6px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: var(--warn-wash);
+    border-color: var(--warn-edge);
+    color: var(--warn-ink);
+    box-shadow: none;
+    font: 600 var(--t-2)/1.3 var(--ui);
   }
-  .card .vitals .on { color: var(--ink-2); }
+  .java-chip:hover:not(:disabled) { background: var(--warn-wash); border-color: var(--warn); color: var(--warn-ink); }
+  .java-chip[data-tone="fault"] { background: var(--fault-wash); border-color: var(--fault-edge); color: var(--fault-ink); }
+  .java-chip[data-tone="fault"]:hover:not(:disabled) { border-color: var(--fault); }
+
+  /* ---- layout ----------------------------------------------------------- */
+
+  main { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; }
 
   /*
     The lamp.
@@ -480,53 +487,18 @@
     background: radial-gradient(circle, var(--lamp) 0%, transparent 70%);
     opacity: .38;
   }
-  .lamp.lg { width: 10px; height: 10px; }
 
   [data-status="running"]  .lamp { --lamp: var(--live); }
   [data-status="stopping"] .lamp,
   [data-status="stale"]    .lamp { --lamp: var(--warn); }
   [data-status="orphaned"] .lamp,
-  [data-status="unknown"]  .lamp { --lamp: var(--fault); }
+  [data-status="unknown"]  .lamp,
+  [data-crashed] .lamp { --lamp: var(--fault); }
 
   [data-status="running"]  .lamp::after { animation: breathe 2.6s ease-in-out infinite; }
   [data-status="stopping"] .lamp::after { animation: breathe 1s ease-in-out infinite; }
   @keyframes breathe { 0%, 100% { opacity: .2; } 50% { opacity: .75; } }
 
-  .newbtn { width: 100%; justify-content: center; padding: 10px; font-weight: 600; }
-
-  /* ---- the list, folded to a rail ------------------------------------------ */
-
-  /*
-    Once a server is picked the list has done its job, and its width sits beside a console that
-    could use the room. Folded, it is a rail of lamps: every server's state stays in view, the
-    selected one stays lit, and a name is a hover away. The fold is the person's choice and is
-    remembered.
-  */
-  .rail-toggle {
-    margin-left: auto;
-    padding: 4px;
-    color: var(--ink-3);
-    border-color: transparent;
-  }
-  .rail-toggle:hover:not(:disabled) { color: var(--ink); background: var(--hover); border-color: var(--line); }
-  .panel > h2 .label { display: flex; align-items: center; gap: var(--s-2); min-width: 0; white-space: nowrap; }
-
-  body.rail main { grid-template-columns: 60px minmax(0, 1fr); }
-  body.rail .panel > h2 { padding: 12px 0 8px; justify-content: center; }
-  body.rail .panel > h2 .label { display: none; }
-  body.rail .rail-toggle { margin: 0; }
-  body.rail #list { padding: 2px 6px var(--s-2); }
-  body.rail .card { grid-template-columns: auto; justify-items: center; padding: 12px 0; gap: 0; }
-  body.rail .card .nm, body.rail .card .vitals { display: none; }
-  body.rail .card .lamp { grid-row: auto; }
-  body.rail .newbtn { padding: 10px 0; }
-  body.rail .newbtn span { display: none; }
-  body.rail .newbtn .ico { width: 1.15em; height: 1.15em; }
-  .side-empty { padding: var(--s-4); color: var(--ink-3); font-size: var(--t-3); }
-  /* The databases sit under the servers in the same list, behind a small heading of their own. */
-  .side-sub { padding: 14px 12px 4px; color: var(--ink-3); font-size: var(--t-1); font-weight: 650; letter-spacing: .09em; text-transform: uppercase; }
-  .card[data-kind="database"] .nm::after { content: 'DB'; margin-left: 8px; padding: 1px 6px; border-radius: 999px; background: var(--lapis-wash); border: 1px solid var(--lapis-edge); color: var(--lapis-ink); font-size: 10px; font-weight: 650; letter-spacing: .04em; vertical-align: 1px; }
-  body.rail .card[data-kind="database"] .nm::after { display: none; }
   .creds { display: grid; gap: 4px; margin: 0; font-family: var(--mono); font-size: var(--t-2); }
   .creds div { display: grid; grid-template-columns: 90px 1fr; gap: 10px; }
   .creds dt { color: var(--ink-3); }
@@ -701,12 +673,7 @@
       linear-gradient(180deg, rgba(var(--accent-rgb), .06), transparent 46%),
       repeating-linear-gradient(63.43deg, rgba(var(--ink-rgb), .018) 0 1px, transparent 1px 56px),
       repeating-linear-gradient(-63.43deg, rgba(var(--ink-rgb), .018) 0 1px, transparent 1px 56px),
-      var(--glass);
-    backdrop-filter: var(--blur);
-    -webkit-backdrop-filter: var(--blur);
-    border: 1px solid var(--line);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-md);
+      var(--void);
     overflow: auto;
   }
   .empty .mark { opacity: .95; margin-bottom: 28px; filter: drop-shadow(0 0 32px rgba(var(--accent-rgb), .4)); }
@@ -744,35 +711,62 @@
 
   /* ---- server view ------------------------------------------------------ */
 
+  /*
+    Strip, notice, diagnosis, then the work. Full bleed: the header and the dock are the frame, and
+    a rounded card inside them would be a frame inside a frame.
+  */
   .server {
-    /* head, vitals, notice, diagnosis, body. The body is the nav and the panes side by side; the
-       command bar belongs to the console rather than to the server, so it lives inside that pane. */
-    grid-template-rows: auto auto auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
     grid-template-columns: minmax(0, 1fr);
-    background: var(--glass);
-    backdrop-filter: var(--blur);
-    -webkit-backdrop-filter: var(--blur);
-    border: 1px solid var(--line);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-md);
-    /* The nav column and the console are darker than the panel; without this their squared
-       corners poke through the panel's rounded ones. */
-    overflow: hidden;
+    background: var(--void);
+    min-width: 0;
   }
-  /* Wraps rather than overflowing. At the app's minimum width there is not room for the name,
-     two badges and five buttons on one line, and the button that fell off the end was Manage. */
-  .srv-head {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
-    padding: var(--s-5) var(--s-6);
-    border-bottom: 1px solid var(--line);
+
+  /*
+    Who, how it is doing, and the verbs, on one line. Wraps rather than overflowing: at the app's
+    900px minimum the name, three vitals and the buttons only just fit, and a long name must push
+    the vitals down rather than the Stop button off the edge.
+  */
+  .srv-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3) var(--s-5);
+    padding: var(--s-4) var(--s-5) var(--s-4) var(--s-6);
+    border-bottom: 1px solid var(--line-soft);
+    min-width: 0;
   }
-  /* Start and Stop are the verbs; the rest are places to go. Splitting them stops five identical
-     buttons from making the one you want as hard to find as the four you do not. */
-  .srv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-  .srv-actions .sep { width: 1px; align-self: stretch; margin: 3px 6px; background: var(--line); }
-  .srv-head h1 { margin: 0; font: 650 var(--t-6)/1.15 var(--display); letter-spacing: -.025em; }
-  .srv-state { font: 500 var(--t-3)/1 var(--ui); color: var(--ink-2); }
-  .srv-id { font: var(--t-2)/1 var(--mono); color: var(--ink-3); }
+  .srv-title { display: grid; gap: 6px; min-width: 0; flex: 0 1 auto; max-width: 100%; }
+  .srv-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .srv-name h1 { margin: 0; font: 650 26px/1.15 var(--display); letter-spacing: -.025em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .srv-id { font: var(--t-2)/1 var(--mono); color: var(--ink-3); white-space: nowrap; }
+  .srv-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font: var(--t-2)/1.4 var(--ui); color: var(--ink-3); }
+  .srv-meta .dot { color: var(--ink-4); }
+  /* The address is a button because the only thing anyone does with it is paste it somewhere. */
+  .srv-meta button.addr {
+    font: var(--t-2)/1.4 var(--mono);
+    color: var(--ink-2);
+    padding: 0 5px;
+    margin: 0 -5px;
+    background: transparent;
+    border: 1px solid transparent;
+    box-shadow: none;
+    border-radius: var(--r-xs);
+  }
+  .srv-meta button.addr:hover:not(:disabled) { background: var(--hover); border-color: var(--line); color: var(--ink); transform: none; }
+
+  /* The state, as a pill in the state's own tones. Neutral when there is nothing to say. */
+  .spill {
+    display: inline-flex; align-items: center; gap: 6px; flex: none;
+    font: 600 var(--t-2)/1 var(--ui);
+    padding: 5px 10px; border-radius: 999px; white-space: nowrap;
+    background: rgba(var(--ink-rgb), .04); color: var(--ink-2); border: 1px solid var(--line);
+  }
+  .spill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+  .spill[data-tone="live"] { color: var(--live-ink); border-color: var(--live-edge); background: var(--live-fill); }
+  .spill[data-tone="warn"] { color: var(--warn-ink); border-color: var(--warn-edge); background: var(--warn-wash); }
+  .spill[data-tone="fault"] { color: var(--fault-ink); border-color: var(--fault-edge); background: var(--fault-fill); }
+
   /* A server anyone can join as any name is a different kind of server, and its logs get bug
      reports refused. That is worth seeing without opening a properties screen. */
   .badge {
@@ -789,47 +783,61 @@
   .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
 
   /*
-    Facts about the server, as cells rather than a run of label-value pairs: each fact gets its own
-    cell with a hairline between, so a glance can find the port without reading the whole line.
+    The four numbers someone glances at a running server for, on an equal grid behind a divider.
+    Each is a figure first; a sparkline or a meter beside it says whether that figure is ordinary.
   */
-  .vitals-bar {
-    /* A <dl>, so it arrives with a 1em block margin nobody asked for. */
+  .vitals {
     margin: 0;
-    /*
-      A grid of equal cells, not a flex row that wraps: equal columns wrap into an even second row
-      instead of leaving one fact alone on a line, and a jar name that does not fit its cell is cut
-      with an ellipsis and carried in full on the cell's title. Each cell draws its own hairline
-      with an outline; where two meet across the one-pixel gap they overlap into a single line.
-    */
+    flex: 1 1 380px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    /* Dense, so when the two-cell jar cannot fit the end of a row a later single cell takes the
-       space instead of leaving a hole. The facts are read individually, so the order can give. */
-    grid-auto-flow: dense;
-    gap: 1px;
-    padding: 0;
-    border-bottom: 1px solid var(--line);
-    background: rgba(0, 0, 0, .16);
-  }
-  .vitals-bar > div {
-    display: grid; gap: 3px;
-    padding: var(--s-3) var(--s-6);
-    background: transparent;
-    outline: 1px solid var(--line);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-4);
+    padding-left: var(--s-5);
+    border-left: 1px solid var(--line-soft);
     min-width: 0;
   }
-  .vital { display: grid; gap: 3px; }
-  /* The jar name is three times the width of any other fact; two cells of it stay readable. */
-  .vital[data-wide] { grid-column: span 2; }
-  .vital dt { font: 650 var(--t-1)/1.4 var(--ui); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); }
-  .vital dd { margin: 0; font: var(--t-3)/1.4 var(--mono); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vitals[data-count="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .vital { display: grid; gap: 5px; min-width: 0; align-content: start; }
+  .vital dt { font: 650 var(--t-1)/1.3 var(--ui); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); white-space: nowrap; }
+  .vital dd { margin: 0; display: flex; align-items: center; gap: 8px; min-width: 0; white-space: nowrap; }
+  .vital .big { font: 650 var(--t-5)/1 var(--display); color: var(--ink); letter-spacing: -.01em; }
+  .vital .of { font: var(--t-2)/1 var(--ui); color: var(--ink-3); }
+  .vital .txt { font: var(--t-3)/1.3 var(--mono); color: var(--ink); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .vital .spark { width: 64px; height: 18px; flex: none; overflow: visible; }
+  .vital .spark polyline { fill: none; stroke: var(--chart-cpu); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .vital .meter { width: 64px; height: 6px; flex: none; border-radius: 999px; background: var(--sunken); border: 1px solid var(--line); overflow: hidden; }
+  .vital .meter i { display: block; height: 100%; background: var(--lapis); border-radius: 999px; }
+  .vital .meter[data-tone="warn"] i { background: var(--warn); }
+  .vital .ok { color: var(--live); width: 14px; height: 14px; }
+
+  /* Start and Stop are the verbs; the rest are behind the menu. One primary button at a time. */
+  .srv-actions { display: flex; align-items: center; gap: 6px; flex: none; margin-left: auto; }
+
+  /*
+    Under about 1080px there is not room for four vitals beside the name and the buttons. TPS is
+    the one that goes: it is also in the Stats tool, with its history, one click away.
+  */
+  @media (max-width: 1080px) {
+    .srv-strip { gap: var(--s-3) var(--s-4); }
+    .vitals { grid-template-columns: repeat(3, minmax(0, 1fr)); flex-basis: 290px; gap: var(--s-3); padding-left: var(--s-4); }
+    .vital[data-v="tps"] { display: none; }
+    /* The figure alone at this width; the meter beside it ran into the next cell. */
+    .vital .meter { display: none; }
+  }
+
+  /* Seven tools in a column need about 430px; at the app's 600px minimum height that is most of
+     what the header and the strip leave, so the buttons give up a little height first. */
+  @media (max-height: 700px) {
+    .dock { gap: 2px; padding: var(--s-1) 0; }
+    .dock button { height: 50px; }
+  }
 
   /*
     A notice says what is wrong, and then what to do about it: a button for the way out when
     the panel has one, one to find the line in the console, and one to dismiss it for this
     run. The actions sit at the right and drop to their own line when the pane is narrow.
   */
-  .notice { padding: var(--s-3) var(--s-6); font-size: var(--t-3); border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-2); align-items: baseline; line-height: 1.5; }
+  .notice { padding: var(--s-3) var(--s-6); font-size: var(--t-3); border-bottom: 1px solid var(--line-soft); display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-2); align-items: baseline; line-height: 1.5; }
   .notice .text { flex: 1 1 320px; min-width: 0; }
   .notice .acts { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; flex: none; align-self: center; }
   .notice .acts button { padding: 3px 10px; font-size: var(--t-2); }
@@ -839,82 +847,139 @@
   .notice.fault { background: var(--fault-wash); color: var(--fault-ink); }
   .notice b { font-weight: 600; white-space: nowrap; }
 
-  /* ---- tabs within a server ---------------------------------------------- */
+  /* ---- the work: console, tool panel, dock ---------------------------------- */
 
   /*
-    Sections down the side rather than across the top: eight of them need more width than a strip
-    has at the app's 900px minimum, and a column reads as what it is - a list of places.
+    [ console ][ tool 480 ][ dock 72 ]. With no tool open the console takes the tool's width. A
+    tool popped out takes the console's place instead, and the console shrinks to one line along
+    the bottom rather than disappearing: its newest line and its error count stay in view.
   */
-  .srv-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: var(--s-3) var(--s-2);
-    width: 196px;
-    border-right: 1px solid var(--line);
-    background: rgba(0, 0, 0, .14);
-    overflow-y: auto;
-    min-height: 0;
-  }
-  .srv-nav button {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid transparent;
-    border-radius: var(--r-sm);
-    background: transparent;
-    box-shadow: none;
-    color: var(--ink-2);
-    font: 500 var(--t-3)/1.2 var(--ui);
-    text-align: left;
-  }
-  .srv-nav button .ico { color: var(--ink-3); transition: color var(--ease); }
-  /* The border stays as it was: the shared button hover adds one, and on a nav item that is what
-     a selected item looks like, so a pointer resting on one read as having moved the selection. */
-  .srv-nav button:hover:not(:disabled) { background: var(--hover); color: var(--ink); transform: none; }
-  .srv-nav button:hover:not([aria-selected="true"]) { border-color: transparent; }
-  .srv-nav button:hover .ico { color: var(--ink-2); }
-  .srv-nav button[aria-selected="true"] {
-    background: var(--raised);
-    border-color: var(--edge);
-    color: var(--ink);
-    font-weight: 600;
-    box-shadow: var(--shadow-sm);
-  }
-  .srv-nav button[aria-selected="true"] .ico { color: var(--lapis); }
-
-  /* The nav and the panes, side by side, filling what the header left over. */
-  .srv-body {
+  .work {
+    position: relative;
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 72px;
+    grid-template-rows: minmax(0, 1fr);
     min-height: 0;
+    min-width: 0;
   }
+  .work[data-tool] { grid-template-columns: minmax(0, 1fr) 480px 72px; }
+  .work[data-tool][data-popped] { grid-template-columns: minmax(0, 1fr) 72px; grid-template-rows: minmax(0, 1fr) 40px; }
+  .console { grid-column: 1; grid-row: 1; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; min-width: 0; }
+  .work[data-popped] .console { display: none; }
+  .tool {
+    grid-column: 2; grid-row: 1;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    min-width: 0;
+    background: var(--surface);
+    border-left: 1px solid var(--line-soft);
+  }
+  .work[data-popped] .tool { grid-column: 1; border-left: 0; }
+  .dock { grid-column: -2 / -1; grid-row: 1 / -1; }
 
   /*
-    Under about 780px the column goes back to being a row: a column out of a 556px content area is
-    a third of the width, too much to spend on navigation when the console is what you came for.
+    Under 1280px a 480px panel beside the console would leave the console a few hundred pixels,
+    which is not a console. Docked there, the panel lies over it as a sheet instead - the console
+    keeps its width underneath and comes back the moment the panel closes.
   */
-  @media (max-width: 780px) {
-    .srv-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-    .srv-nav {
-      flex-direction: row;
-      width: auto;
-      padding: 6px 8px;
-      border-right: 0;
-      border-bottom: 1px solid var(--line);
-      overflow-x: auto;
-      scrollbar-width: none;
+  @media (max-width: 1279px) {
+    .work[data-tool]:not([data-popped]) { grid-template-columns: minmax(0, 1fr) 72px; }
+    .work[data-tool]:not([data-popped]) .tool {
+      /* Placement released: an absolutely positioned grid item measures itself against the cell
+         it is placed in, which here would be the dock's 72px, not the whole of the work area. */
+      grid-column: auto; grid-row: auto;
+      position: absolute;
+      top: 0; bottom: 0; right: 72px;
+      width: min(480px, calc(100% - 120px));
+      z-index: 4;
+      border-left: 1px solid var(--line);
+      box-shadow: var(--shadow-lg);
     }
-    .srv-nav::-webkit-scrollbar { height: 0; }
-    .srv-nav button { width: auto; flex: none; }
   }
+
+  .tool-head { display: flex; align-items: center; gap: 2px; height: 52px; padding: 0 var(--s-3) 0 var(--s-5); border-bottom: 1px solid var(--line-soft); min-width: 0; }
+  .tool-head h2 { margin: 0; flex: 1; min-width: 0; font: 650 19px/1.2 var(--display); letter-spacing: -.015em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .panes { display: grid; min-height: 0; min-width: 0; }
   .pane { display: none; min-height: 0; min-width: 0; grid-area: 1 / 1; }
   .pane[data-active] { display: grid; }
-  .pane-console { grid-template-rows: auto minmax(0, 1fr) auto; }
+
+  /* The tool's own header names it; the title each pane draws for itself is kept only for the
+     sentence under it that says what the screen is for. */
+  .tool .pane-head { position: static; display: block; padding: var(--s-4) var(--s-5) 0; border-bottom: 0; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .tool .pane-head .mark, .tool .pane-head h2 { display: none; }
+  .tool .pane-head p { font-size: var(--t-2); }
+  .tool .pane-body { padding: var(--s-4) var(--s-5) var(--s-5); }
+  .tool .pane-foot { margin: var(--s-2) calc(-1 * var(--s-5)) calc(-1 * var(--s-5)); padding: var(--s-3) var(--s-5); }
+
+  .con-mini {
+    grid-column: 1; grid-row: 2;
+    display: flex; align-items: center; gap: var(--s-3);
+    width: 100%; height: 40px;
+    padding: 0 var(--s-5);
+    background: var(--chrome);
+    border: 0;
+    border-top: 1px solid var(--line-soft);
+    border-radius: 0;
+    box-shadow: none;
+    font: var(--t-2)/1 var(--ui);
+    color: var(--ink-2);
+    text-align: left;
+  }
+  .con-mini:hover:not(:disabled) { background: var(--surface); border-color: var(--line-soft); transform: none; }
+  .con-mini b { flex: none; color: var(--ink); font-weight: 600; }
+  .con-mini .last { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); color: var(--console-ink); }
+  .con-mini .errs { flex: none; color: var(--fault-ink); font-weight: 600; }
+  .con-mini .errs:empty { display: none; }
+
+  /*
+    The dock: every tool a server has, as a column of icons with their names under them. Buttons
+    rather than tabs - each opens a panel beside the console, and pressing the open one again
+    closes it - so they announce expanded and collapsed rather than selected.
+  */
+  .dock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: var(--s-2) 0;
+    background: var(--chrome);
+    border-left: 1px solid var(--line-soft);
+    overflow-y: auto;
+    min-height: 0;
+    scrollbar-width: none;
+  }
+  .dock::-webkit-scrollbar { width: 0; }
+  .dock button {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 5px;
+    flex: none;
+    width: 60px; height: 56px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--r-sm);
+    box-shadow: none;
+    color: var(--ink-3);
+    font: 500 var(--t-1)/1 var(--ui);
+  }
+  .dock button .ico { width: 18px; height: 18px; }
+  .dock button:hover:not(:disabled) { background: var(--hover); color: var(--ink); border-color: transparent; transform: none; }
+  .dock button[aria-expanded="true"] { background: var(--raised); color: var(--ink); border-color: var(--line); }
+  .dock button[aria-expanded="true"] .ico { color: var(--lapis); }
+  .dock-badge {
+    position: absolute; top: 4px; right: 8px;
+    min-width: 16px; height: 16px; padding: 0 4px;
+    border-radius: 999px;
+    background: var(--lapis);
+    color: var(--void);
+    font: 700 10px/16px var(--ui);
+    text-align: center;
+  }
   /*
     Rows inside a pane size themselves against the PANE, not the window. The container is the
     SCROLLER, not the body: a container query cannot restyle the element it measures, and the rules
@@ -1078,6 +1143,67 @@
 
   .facts { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-6); font: var(--t-2)/1.6 var(--ui); color: var(--ink-3); }
   .facts b { color: var(--ink-2); font-weight: 600; font-family: var(--mono); }
+
+  /* ---- plugins: the reference layout for a tool ------------------------------ */
+
+  /*
+    Search first, then what is waiting, then the list. The list is a column of dense rows - a
+    lettered tile, the name over where it came from, the version - separated by the faintest rule,
+    because a list of forty plugins ruled at full strength reads as a spreadsheet.
+  */
+  .plug-add { display: grid; gap: var(--s-3); }
+
+  .callout {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3);
+    padding: var(--s-3) var(--s-4);
+    background: var(--lapis-wash);
+    border: 1px solid var(--lapis-edge);
+    border-radius: var(--r);
+  }
+  .callout-text { flex: 1 1 200px; min-width: 0; display: grid; gap: 2px; }
+  .callout-text b { font: 600 var(--t-3)/1.3 var(--ui); color: var(--lapis-ink); }
+  .callout-text span { font: var(--t-2)/1.4 var(--ui); color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .callout-progress { flex-basis: 100%; margin: 0; }
+  .callout-progress:empty { display: none; }
+
+  .plug-head { display: flex; align-items: center; gap: var(--s-2); }
+  .plug-head .hist-title { margin: 0; flex: 1; }
+  .plug-head button { padding: 4px 10px; font-size: var(--t-2); }
+
+  .plist { display: grid; }
+  .plug {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--s-3);
+    padding: 9px var(--s-1);
+    border-bottom: 1px solid var(--line-faint);
+    transition: background-color var(--ease);
+  }
+  .plug:last-child { border-bottom: 0; }
+  .plug:hover { background-color: var(--hover); }
+  .plug-tile {
+    display: grid; place-items: center;
+    width: 32px; height: 32px;
+    border-radius: var(--r-sm);
+    background: var(--raised);
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+    font: 650 var(--t-2)/1 var(--display);
+    letter-spacing: .02em;
+  }
+  .plug-main { min-width: 0; display: grid; gap: 2px; }
+  .plug-name { font: 600 var(--t-3)/1.3 var(--ui); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .plug-src { font: var(--t-2)/1.3 var(--ui); color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .plug-ver { font: var(--t-2)/1 var(--mono); color: var(--ink-2); white-space: nowrap; max-width: 12ch; overflow: hidden; text-overflow: ellipsis; }
+  /* A fixed width, empty on a jar added by hand, so the versions line up down the list. */
+  .plug-acts { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 164px; }
+  .plug-acts button { padding: 3px 9px; font-size: var(--t-2); }
+  .plug-acts .icon-btn { width: 28px; height: 28px; padding: 0; }
+  /* The same two verbs on every row; quiet until the row is pointed at or reached by keyboard. */
+  .plug-acts .quiet { display: inline-flex; gap: 2px; opacity: .45; transition: opacity var(--ease); }
+  .plug:hover .quiet, .plug:focus-within .quiet { opacity: 1; }
+  .plug[data-off] .plug-name, .plug[data-off] .plug-tile { opacity: .55; }
 
   /* ---- players -------------------------------------------------------------- */
 
@@ -1346,15 +1472,25 @@
 
   /* ---- console ---------------------------------------------------------- */
 
-  .con-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px 10px var(--s-5); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  .con-search { position: relative; flex: 1 1 150px; min-width: 120px; max-width: 300px; }
+  .con-bar { display: flex; align-items: center; gap: 6px; padding: 10px var(--s-3) 10px var(--s-5); border-bottom: 1px solid var(--line-soft); flex-wrap: wrap; }
+  .con-search { position: relative; flex: 0 1 220px; min-width: 140px; }
   .con-search input { padding-left: 30px; font-size: var(--t-3); }
   .con-search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--ink-3); }
-  .con-count { font: var(--t-1)/1 var(--mono); color: var(--ink-3); white-space: nowrap; }
+  .con-count { font: var(--t-1)/1 var(--mono); color: var(--ink-3); white-space: nowrap; margin-right: 4px; }
+  /* The counts beside the level filters, in the level's own ink, so a glance says whether there is
+     anything to filter for. */
+  .seg .n { margin-left: 5px; font: 600 var(--t-1)/1 var(--mono); }
+  .seg .n[data-tone="warn"] { color: var(--warn-ink); }
+  .seg .n[data-tone="fault"] { color: var(--fault-ink); }
 
   .menu-wrap { position: relative; display: inline-flex; }
   #bExport .caret { color: var(--ink-3); margin-left: -2px; }
   #bExport[aria-expanded="true"] { background: var(--hover-hi); border-color: var(--edge); }
+  .menu-sep { height: 1px; margin: var(--s-1) var(--s-2); background: var(--line-soft); }
+  /* A checkable item: the tick is drawn only while it is on, and its space is kept either way. */
+  .menu button[role="menuitemcheckbox"] { grid-template-columns: 16px minmax(0, 1fr); column-gap: var(--s-2); align-items: center; }
+  .menu button[role="menuitemcheckbox"]::before { content: ""; width: 12px; height: 7px; margin: 0 0 3px 2px; border: solid transparent; border-width: 0 0 2px 2px; transform: rotate(-45deg); }
+  .menu button[role="menuitemcheckbox"][aria-checked="true"]::before { border-color: var(--lapis); }
   .menu {
     position: absolute;
     top: calc(100% + var(--s-1));
@@ -1417,7 +1553,8 @@
     display: block; min-width: 4ch; padding-right: 12px; text-align: right;
     color: var(--ink-3); user-select: none; -webkit-user-select: none;
   }
-  .ln .pre { color: var(--ink-3); }
+  /* The timestamp and thread are looked up, not read, so they sit below the reading line. */
+  .ln .pre { color: var(--ink-4); }
   .ln mark { background: var(--warn-edge); color: var(--warn-ink); border-radius: 2px; }
   .ln.warn  { border-left-color: var(--warn); background: rgba(245, 184, 74, .05); }
   .ln.error { border-left-color: var(--fault); background: rgba(255, 107, 97, .06); }
@@ -1428,14 +1565,14 @@
 
   .jump { position: absolute; right: 18px; bottom: 16px; box-shadow: var(--shadow-lg); font-size: var(--t-3); background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
 
-  .cmd { display: flex; gap: 10px; padding: 12px var(--s-5); border-top: 1px solid var(--line); align-items: center; }
-  .cmd .prompt { font: 600 var(--t-3)/1 var(--mono); color: var(--lapis); }
+  .cmd { display: flex; gap: 10px; padding: 12px var(--s-3) 12px var(--s-5); border-top: 1px solid var(--line-soft); align-items: center; }
+  .cmd .prompt { font: 600 var(--t-4)/1 var(--mono); color: var(--lapis); }
   .cmd input { font-family: var(--mono); font-size: var(--t-3); }
 
   /* ---- sheets: add a server, settings ----------------------------------- */
 
-  .sheet { align-content: start; background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-md); overflow: auto; }
-  .sheet-head { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-5) var(--s-6); border-bottom: 1px solid var(--line); }
+  .sheet { align-content: start; background: var(--void); overflow: auto; }
+  .sheet-head { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-5) var(--s-6); border-bottom: 1px solid var(--line-soft); }
   .sheet-head h1 { margin: 0; font: 650 var(--t-6)/1.15 var(--display); letter-spacing: -.025em; }
   /* Centred in the stage. A form pinned to the left of a wide panel reads as unfinished; a centred
      column reads as the one thing this screen is about. */
@@ -1577,20 +1714,18 @@
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
   }
 
-  /* One column once two stop fitting. The Electron window has a 900px minimum, so this is for a
-     browser tab that has been dragged narrow. */
+  /* Narrower than the desktop app allows: a browser tab dragged small. The brand gives its width
+     to the tabs, and the dock's labels go, leaving the icons, which keep their names as tooltips. */
   @media (max-width: 840px) {
-    main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(110px, 26vh) minmax(0, 1fr); }
-    .rootchip { display: none; }
-    /* Folded in the stacked layout, the list is one short row: the toggle, the lamps in a line,
-       and the add button, so the console below gets nearly the whole window. */
-    body.rail main { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-    body.rail .sidebar { grid-template-rows: none; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-2); }
-    body.rail .sidebar .panel { grid-template-rows: none; grid-template-columns: auto minmax(0, 1fr); }
-    body.rail .panel > h2 { padding: 0 var(--s-2); border-right: 1px solid var(--line); }
-    body.rail #list { display: flex; flex-wrap: wrap; align-items: center; padding: 6px var(--s-2); }
-    body.rail .card { width: auto; padding: 8px 9px; }
-    body.rail .newbtn { width: auto; padding: 0 var(--s-3); }
+    .brand b { display: none; }
+    .work { grid-template-columns: minmax(0, 1fr) 52px; }
+    .work[data-tool][data-popped] { grid-template-columns: minmax(0, 1fr) 52px; }
+    .work[data-tool]:not([data-popped]) { grid-template-columns: minmax(0, 1fr) 52px; }
+    .work[data-tool]:not([data-popped]) .tool { right: 52px; width: calc(100% - 52px); }
+    .dock button { width: 44px; height: 44px; }
+    .dock button .lbl { display: none; }
+    .srv-strip { padding-left: var(--s-5); }
+    .vitals { border-left: 0; padding-left: 0; flex-basis: 100%; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1672,6 +1807,18 @@
   <symbol id="i-bolt" viewBox="0 0 16 16" stroke-miterlimit="2"><path d="M9 2.8L4.6 8.5h3.4L7 13.2l4.4-5.7H8z"/></symbol>
   <symbol id="i-restore" viewBox="0 0 16 16"><path d="M3 8a5 5 0 1 0 1.8-3.85"/><path d="M3 2v3h3"/></symbol>
   <symbol id="i-search" viewBox="0 0 16 16"><path d="M2.5 2.5h8v8h-8z"/><path d="M10.5 10.5L14 14"/></symbol>
+
+  <symbol id="i-grid" viewBox="0 0 16 16"><path d="M2.5 2.5h4.5v4.5H2.5zM9 2.5h4.5v4.5H9zM2.5 9h4.5v4.5H2.5zM9 9h4.5v4.5H9z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 16 16" stroke-linejoin="round"><path d="M6.6 1.5h2.8l.4 1.9 1.4.8 1.8-.6 1.4 2.4-1.4 1.3v1.4l1.4 1.3-1.4 2.4-1.8-.6-1.4.8-.4 1.9H6.6l-.4-1.9-1.4-.8-1.8.6L1.6 10l1.4-1.3V7.3L1.6 6l1.4-2.4 1.8.6 1.4-.8z"/><circle cx="8" cy="8" r="2"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 16 16"><path d="M5 3.5v9M11 3.5v9"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 16 16"><path d="M5.5 5.5h8v8h-8z"/><path d="M10.5 5.5v-3h-8v8h3"/></symbol>
+  <symbol id="i-wrap" viewBox="0 0 16 16"><path d="M2 4h12M2 12h3"/><path d="M2 8h9.5a2 2 0 0 1 0 4H8"/><path d="M9.5 10.5L8 12l1.5 1.5"/></symbol>
+  <symbol id="i-share" viewBox="0 0 16 16"><path d="M8 2.5v8"/><path d="M5 5.5l3-3 3 3"/><path d="M3 9v4.5h10V9"/></symbol>
+  <symbol id="i-popout" viewBox="0 0 16 16"><path d="M9 2.5h4.5V7"/><path d="M13.5 2.5L8 8"/><path d="M11.5 9.5v4h-9v-9h4"/></symbol>
+  <symbol id="i-dockin" viewBox="0 0 16 16"><path d="M2.5 3h11v10h-11z"/><path d="M9.5 3v10"/></symbol>
+  <symbol id="i-close" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 16 16" stroke-miterlimit="2"><path d="M8 2.5l6 11H2z"/><path d="M8 6.5v3.5M8 11.5v1"/></symbol>
 </svg>
 
 <div id="banner"></div>
@@ -1686,29 +1833,32 @@
     </svg>
     <b>SpawnLoft</b>
   </span>
-  <span class="rootchip" id="rootChip" hidden></span>
-  <span class="grow"></span>
-  <span class="ver" id="appver"></span>
+  <!--
+    The servers, as tabs across the top rather than a list down the side: the width a list took
+    now belongs to the console, and every server's state is still in view. One strip that scrolls
+    sideways when there are too many to fit - it never wraps, because a second row of tabs moves
+    everything under it every time a server is added.
+  -->
+  <nav class="srv-tabs" aria-label="Servers">
+    <div class="tabs-scroll" id="list">
+      <button type="button" class="stab stab-home" id="tabHome" aria-label="Overview" title="Overview">
+        <svg class="ico" aria-hidden="true" focusable="false"><use href="#i-grid"/></svg>
+      </button>
+    </div>
+    <button type="button" class="icon-btn" id="bNew" aria-label="Add a server" title="Add a server">
+      <svg class="ico" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg>
+    </button>
+  </nav>
+  <button type="button" class="java-chip" id="javaChip" hidden>
+    <svg class="ico" aria-hidden="true" focusable="false"><use href="#i-alert"/></svg><span>Java</span>
+  </button>
   <button id="bUpdate" class="ghost" hidden>Check for updates</button>
-  <button id="bFeedback" class="ghost">Feedback</button>
-  <button id="bSettings" class="ghost">Settings</button>
+  <button type="button" class="icon-btn" id="bSettings" aria-label="Preferences" title="Preferences">
+    <svg class="ico" aria-hidden="true" focusable="false"><use href="#i-gear"/></svg>
+  </button>
 </header>
 
 <main>
-  <aside class="sidebar">
-    <div class="panel">
-      <h2>
-        <span class="label">Servers <span class="n" id="count"></span></span>
-        <button class="ghost rail-toggle" id="bRail" type="button" aria-expanded="true"
-          aria-controls="list" aria-label="Collapse the server list" title="Collapse the server list">
-          <svg class="ico" aria-hidden="true" focusable="false"><use href="#i-panel"/></svg>
-        </button>
-      </h2>
-      <div id="list" role="list"></div>
-    </div>
-    <button class="newbtn primary" id="bNew"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg><span>Add a server</span></button>
-  </aside>
-
   <section class="stage">
 
     <!-- ============ nothing selected ===================================== -->
@@ -1738,57 +1888,63 @@
 
     <!-- ============ a server is selected ================================= -->
     <div class="view server" id="vServer">
-      <div class="srv-head">
-        <span class="lamp lg"></span>
-        <h1 id="srvName">—</h1>
-        <span class="srv-id" id="srvId" hidden title="The name the folder and the commands use"></span>
-        <span class="srv-state" id="srvState"></span>
-        <span class="badge" id="srvOffline" hidden title="Anyone can join as any name. Players get name-derived UUIDs, and every log carries an OFFLINE/INSECURE banner.">Offline mode</span>
-        <span class="grow"></span>
-        <span class="srv-actions">
-          <button class="primary" id="bStart"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-play"/></svg>Start</button>
-          <button id="bStop"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-stop"/></svg>Stop</button>
+      <!--
+        Who this is, how it is doing, and the verbs, in one strip. The facts that are configuration
+        rather than state - the jar, the RCON port, the world's name - live in Settings now; what
+        stays here is what changes while you watch.
+      -->
+      <div class="srv-strip">
+        <div class="srv-title">
+          <div class="srv-name">
+            <h1 id="srvName">—</h1>
+            <span class="srv-id" id="srvId" hidden title="The name the folder and the commands use"></span>
+            <span class="spill" id="srvState"></span>
+            <span class="badge" id="srvOffline" hidden title="Anyone can join as any name. Players get name-derived UUIDs, and every log carries an OFFLINE/INSECURE banner.">Offline mode</span>
+          </div>
+          <div class="srv-meta" id="srvMeta"></div>
+        </div>
+        <dl class="vitals" id="srvVitals"></dl>
+        <div class="srv-actions">
           <button id="bRestart"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-restart"/></svg>Restart</button>
-          <span class="sep"></span><button id="bFolder" class="ghost" title="Show this server's files in Explorer"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-folder"/></svg>Open folder</button>
-          <button id="bManage" class="ghost"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-dots"/></svg>Manage</button>
-        </span>
+          <button id="bStop" class="danger"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-stop"/></svg>Stop</button>
+          <button class="primary" id="bStart"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-play"/></svg>Start</button>
+          <span class="menu-wrap" id="moreWrap">
+            <button type="button" id="bManage" class="icon-btn" aria-label="More actions" title="More actions"
+              aria-haspopup="menu" aria-expanded="false" aria-controls="moreMenu">
+              <svg class="ico" aria-hidden="true" focusable="false"><use href="#i-dots"/></svg>
+            </button>
+            <div class="menu" id="moreMenu" role="menu" aria-labelledby="bManage" hidden></div>
+          </span>
+        </div>
       </div>
 
-      <dl class="vitals-bar" id="srvVitals"></dl>
       <div id="srvNotice"></div>
       <div id="srvDiag"></div>
 
-      <div class="srv-body">
-      <nav class="srv-nav" role="tablist" aria-orientation="vertical" aria-label="Server sections">
-        <button role="tab" id="tabConsole" aria-controls="paneConsole" data-pane="console" aria-selected="true"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-terminal"/></svg>Console</button>
-        <button role="tab" id="tabPlugins" aria-controls="panePlugins" data-pane="plugins" aria-selected="false"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-plug"/></svg>Plugins</button>
-        <button role="tab" id="tabWorlds" aria-controls="paneWorlds" data-pane="worlds" aria-selected="false"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-map"/></svg>Worlds</button>
-        <button role="tab" id="tabBackups" aria-controls="paneBackups" data-pane="backups" aria-selected="false"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-archive"/></svg>Backups</button>
-        <button role="tab" id="tabPlayers" aria-controls="panePlayers" data-pane="players" aria-selected="false"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-user"/></svg>Players</button>
-        <button role="tab" id="tabPerformance" aria-controls="panePerformance" data-pane="performance" aria-selected="false"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-pulse"/></svg>Performance</button>
-        <button role="tab" id="tabScheduler" aria-controls="paneScheduler" data-pane="scheduler" aria-selected="false"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-clock"/></svg>Scheduler</button>
-        <button role="tab" id="tabSettings" aria-controls="paneSettings" data-pane="settings" aria-selected="false"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-sliders"/></svg>Settings</button>
-      </nav>
-
-      <div class="panes">
-      <div class="pane pane-console" id="paneConsole" role="tabpanel" tabindex="0" aria-labelledby="tabConsole" data-active>
+      <!--
+        The console stays; everything else opens beside it. The console is what someone is
+        watching while they change a plugin or read a backup list, and the old tabs made that a
+        choice between the two.
+      -->
+      <div class="work" id="work">
+      <section class="console" id="paneConsole" aria-label="Console">
         <div class="con-bar">
           <span class="con-search">
             <svg class="ico" aria-hidden="true" focusable="false"><use href="#i-search"/></svg>
-            <input id="conSearch" placeholder="Search the console" autocomplete="off" aria-label="Search the console">
+            <input id="conSearch" placeholder="Filter the console" autocomplete="off" aria-label="Filter the console">
           </span>
           <span class="seg" role="group" aria-label="Filter by level">
             <button data-lvl="all" aria-pressed="true">All</button>
-            <button data-lvl="warn">Warnings</button>
-            <button data-lvl="error">Errors</button>
+            <button data-lvl="warn">Warnings <b class="n" data-tone="warn" id="nWarn">0</b></button>
+            <button data-lvl="error">Errors <b class="n" data-tone="fault" id="nErr">0</b></button>
           </span>
-          <button id="bPause" aria-pressed="false">Pause</button>
-          <button id="bWrap" aria-pressed="false">Wrap</button>
-          <button id="bNums" aria-pressed="false">Line Numbers</button>
-          <button id="bCopy">Copy</button>
-          <button id="bClear">Clear</button>
-          <span class="menu-wrap">
-            <button id="bExport" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu">Export<svg class="ico caret" aria-hidden="true" focusable="false"><use href="#i-caret"/></svg></button>
+          <span class="grow"></span>
+          <span class="con-count" id="conCount"></span>
+          <button type="button" id="bPause" class="icon-btn" aria-pressed="false" aria-label="Pause" title="Pause"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-pause"/></svg></button>
+          <button type="button" id="bWrap" class="icon-btn" aria-pressed="false" aria-label="Wrap long lines" title="Wrap long lines"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-wrap"/></svg></button>
+          <button type="button" id="bCopy" class="icon-btn" aria-label="Copy the lines shown" title="Copy the lines shown"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-copy"/></svg></button>
+          <span class="menu-wrap" id="shareWrap">
+            <button type="button" id="bExport" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-share"/></svg>Share log<svg class="ico caret" aria-hidden="true" focusable="false"><use href="#i-caret"/></svg></button>
             <div class="menu" id="exportMenu" role="menu" aria-labelledby="bExport" hidden>
               <button role="menuitem" id="miExportFile" tabindex="-1">
                 <b>Save to a .log file</b>
@@ -1798,10 +1954,16 @@
                 <b>Upload to mclo.gs</b>
                 <span>Publishes a shareable link and opens it.</span>
               </button>
+              <div class="menu-sep" role="separator"></div>
+              <button role="menuitemcheckbox" id="bNums" aria-checked="false" tabindex="-1">
+                <b>Line numbers</b>
+              </button>
+              <button role="menuitem" id="bClear" tabindex="-1">
+                <b>Clear the view</b>
+                <span>The log file on disk is untouched.</span>
+              </button>
             </div>
           </span>
-          <span class="grow"></span>
-          <span class="con-count" id="conCount"></span>
         </div>
         <div class="log-wrap">
           <pre id="log" class="nowrap" tabindex="0" role="log" aria-label="Server console"></pre>
@@ -1809,40 +1971,57 @@
         </div>
 
         <div class="cmd">
-          <span class="prompt" aria-hidden="true">&gt;</span>
-          <input id="cmd" placeholder="Send a server command — try list" autocomplete="off" aria-label="Server command">
-          <button id="bSend">Send</button>
+          <span class="prompt" aria-hidden="true">/</span>
+          <input id="cmd" placeholder="Type a command — ↑ recalls" autocomplete="off" aria-label="Server command">
+          <button id="bSend" class="primary">Send</button>
         </div>
-      </div>
+      </section>
 
-      <div class="pane pane-scroll" id="panePlugins" role="tabpanel" tabindex="0" aria-labelledby="tabPlugins">
-        <div class="pane-body wide" id="pluginsBody"></div>
-      </div>
+      <section class="tool" id="toolPanel" aria-labelledby="toolTitle" hidden>
+        <div class="tool-head">
+          <h2 id="toolTitle"></h2>
+          <button type="button" class="icon-btn" id="toolPop" aria-label="Pop out" title="Pop out"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-popout"/></svg></button>
+          <button type="button" class="icon-btn" id="toolClose" aria-label="Close" title="Close"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+        </div>
+        <div class="panes">
+          <div class="pane pane-scroll" id="panePlugins" tabindex="-1">
+            <div class="pane-body wide" id="pluginsBody"></div>
+          </div>
+          <div class="pane pane-scroll" id="paneWorlds" tabindex="-1">
+            <div class="pane-body wide" id="worldsBody"></div>
+          </div>
+          <div class="pane pane-scroll" id="paneBackups" tabindex="-1">
+            <div class="pane-body wide" id="backupsBody"></div>
+          </div>
+          <div class="pane pane-scroll" id="panePlayers" tabindex="-1">
+            <div class="pane-body wide" id="playersBody"></div>
+          </div>
+          <div class="pane pane-scroll" id="panePerformance" tabindex="-1">
+            <div class="pane-body wide" id="performanceBody"></div>
+          </div>
+          <div class="pane pane-scroll" id="paneScheduler" tabindex="-1">
+            <div class="pane-body wide" id="schedulerBody"></div>
+          </div>
+          <div class="pane pane-scroll" id="paneSettings" tabindex="-1">
+            <div class="pane-body" id="settingsBody"></div>
+          </div>
+        </div>
+      </section>
 
-      <div class="pane pane-scroll" id="paneWorlds" role="tabpanel" tabindex="0" aria-labelledby="tabWorlds">
-        <div class="pane-body wide" id="worldsBody"></div>
-      </div>
+      <!-- While a tool fills the space, the console is still one line tall rather than gone. -->
+      <button type="button" class="con-mini" id="conMini" hidden>
+        <b>Console</b><span class="last" id="conMiniLast"></span><span class="errs" id="conMiniErr"></span>
+      </button>
 
-      <div class="pane pane-scroll" id="paneBackups" role="tabpanel" tabindex="0" aria-labelledby="tabBackups">
-        <div class="pane-body wide" id="backupsBody"></div>
-      </div>
-
-      <div class="pane pane-scroll" id="panePlayers" role="tabpanel" tabindex="0" aria-labelledby="tabPlayers">
-        <div class="pane-body wide" id="playersBody"></div>
-      </div>
-
-      <div class="pane pane-scroll" id="panePerformance" role="tabpanel" tabindex="0" aria-labelledby="tabPerformance">
-        <div class="pane-body wide" id="performanceBody"></div>
-      </div>
-
-      <div class="pane pane-scroll" id="paneScheduler" role="tabpanel" tabindex="0" aria-labelledby="tabScheduler">
-        <div class="pane-body wide" id="schedulerBody"></div>
-      </div>
-
-      <div class="pane pane-scroll" id="paneSettings" role="tabpanel" tabindex="0" aria-labelledby="tabSettings">
-        <div class="pane-body" id="settingsBody"></div>
-      </div>
-      </div>
+      <nav class="dock" aria-label="Server tools">
+        <button type="button" id="tabPlugins" data-pane="plugins" aria-expanded="false" aria-controls="toolPanel"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-plug"/></svg><span class="lbl">Plugins</span><b class="dock-badge" hidden></b></button>
+        <button type="button" id="tabWorlds" data-pane="worlds" aria-expanded="false" aria-controls="toolPanel"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-map"/></svg><span class="lbl">Worlds</span></button>
+        <button type="button" id="tabBackups" data-pane="backups" aria-expanded="false" aria-controls="toolPanel"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-archive"/></svg><span class="lbl">Backups</span></button>
+        <button type="button" id="tabPlayers" data-pane="players" aria-expanded="false" aria-controls="toolPanel"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-user"/></svg><span class="lbl">Players</span></button>
+        <button type="button" id="tabPerformance" data-pane="performance" aria-expanded="false" aria-controls="toolPanel"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-pulse"/></svg><span class="lbl">Stats</span></button>
+        <button type="button" id="tabScheduler" data-pane="scheduler" aria-expanded="false" aria-controls="toolPanel"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-clock"/></svg><span class="lbl">Schedule</span></button>
+        <button type="button" id="tabSettings" data-pane="settings" aria-expanded="false" aria-controls="toolPanel"><svg class="ico" aria-hidden="true" focusable="false"><use href="#i-sliders"/></svg><span class="lbl">Settings</span></button>
+      </nav>
       </div>
     </div>
 
@@ -2104,7 +2283,7 @@
     <!-- ============ settings ============================================= -->
     <div class="view sheet" id="vSettings">
       <div class="sheet-head">
-        <h1>Settings</h1>
+        <h1>Preferences</h1>
         <span class="grow"></span>
         <button class="ghost" id="bSetClose">Close</button>
       </div>
@@ -2181,6 +2360,14 @@
         <div>
           <h2>About</h2>
           <dl class="kv" id="setAbout"></dl>
+        </div>
+        <div>
+          <h2>Feedback</h2>
+          <p class="hint" style="margin:0 0 12px">
+            A bug report with the diagnostics already filled in, a question, or an idea. Each opens
+            GitHub in your browser; nothing is sent from here on its own.
+          </p>
+          <div class="row"><button id="bFeedback">Send feedback…</button></div>
         </div>
         <div>
           <h2>Reporting a problem</h2>
@@ -2260,9 +2447,13 @@ const state = {
   layout: null,
   appInfo: null,
   busy: false,
-  // Which section of a server is showing. Kept across servers rather than per server: someone
-  // comparing the same setting on two servers should not have to re-open the tab each time.
+  // 'start', 'stop' or 'restart' while one is under way.
+  acting: null,
+  // Which tool is open beside the console, or 'console' for none. Remembered per server; see
+  // recallTool().
   pane: 'console',
+  // What /health said, for the Java chip.
+  health: null,
 };
 
 /** The selected thing, whichever list it is in. */
@@ -2447,99 +2638,186 @@ function show(view) {
   for (const key of Object.keys(VIEW_EL)) $(VIEW_EL[key]).toggleAttribute('data-active', key === view);
 }
 
+// ------------------------------------------------------------------ tools ----
+
 /**
- * Show one section of the selected server.
+ * The tools a server has, beside the console.
  *
- * <p>The console keeps streaming while another tab is showing. Its lines are appended to a hidden
- * element, which costs nothing, and means coming back to it has the scrollback intact rather than
- * a console that starts again from whenever you looked away.
+ * <p>Each opens in the panel between the console and the dock, or popped out in the console's
+ * place. The console keeps streaming either way: its lines are appended to an element that may be
+ * hidden, which costs nothing, and means coming back to it has the scrollback intact.
  */
-function showPane(pane) {
-  state.pane = pane;
-  for (const b of $$('.srv-nav [data-pane]')) {
-    const on = b.dataset.pane === pane;
-    b.setAttribute('aria-selected', String(on));
-    // One stop in the tab order for the whole list, which is how a tablist is supposed to behave:
-    // Tab moves past the section list to the section, and the arrow keys move within it. Six stops
-    // between the server header and its content is six presses to get anywhere.
-    b.tabIndex = on ? 0 : -1;
+const TOOL_NAMES = {
+  plugins: 'Plugins', worlds: 'Worlds', backups: 'Backups', players: 'Players',
+  performance: 'Stats', scheduler: 'Schedule', settings: 'Settings',
+};
+// A settings form and a dense backup grid are cramped at 480px; the rest read fine beside the
+// console. Each opens where it fits, and a tool someone moved stays where they put it.
+const POPPED_BY_DEFAULT = new Set(['settings', 'backups']);
+// A database has no plugins, worlds, backups, players or tasks of its own.
+const DB_TOOLS = new Set(['performance', 'settings']);
+const NARROW = window.matchMedia('(max-width: 1279px)');
+
+const toolView = { tool: null, popped: false };
+
+/*
+  The open tool and whether it is popped out, remembered per server: someone who keeps Plugins
+  open on the modded server and nothing open on the lobby should come back to both that way.
+  localStorage can be missing or refuse (a locked-down profile, a private window), and a panel that
+  fails to remember still opens.
+*/
+function toolKey(name) { return 'mcctl.tool.' + name; }
+
+function recallTool(name) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(toolKey(name)) || 'null');
+    if (saved && (saved.tool === null || Object.hasOwn(TOOL_NAMES, saved.tool))) {
+      return { tool: saved.tool, popped: Boolean(saved.popped) };
+    }
+  } catch { /* nothing remembered is the same as nothing open */ }
+  return { tool: null, popped: false };
+}
+
+function rememberTool() {
+  if (!state.current) return;
+  try { localStorage.setItem(toolKey(state.current), JSON.stringify(toolView)); } catch { /* see recallTool */ }
+}
+
+const paneId = (tool) => 'pane' + tool[0].toUpperCase() + tool.slice(1);
+const dockId = (tool) => 'tab' + tool[0].toUpperCase() + tool.slice(1);
+
+function toolLabel(tool) {
+  return tool === 'plugins' ? $('#tabPlugins .lbl').textContent : TOOL_NAMES[tool];
+}
+
+/** Open a tool beside the console, popped out in its place, or close it (tool null). */
+function setTool(tool, popped) {
+  if (tool && isDb(rowOf(state.current)) && !DB_TOOLS.has(tool)) tool = null;
+  toolView.tool = tool || null;
+  toolView.popped = Boolean(toolView.tool && popped);
+  state.pane = toolView.tool || 'console';
+
+  const work = $('#work');
+  work.toggleAttribute('data-tool', Boolean(toolView.tool));
+  work.toggleAttribute('data-popped', toolView.popped);
+  $('#toolPanel').hidden = !toolView.tool;
+  $('#conMini').hidden = !toolView.popped;
+  for (const b of $$('.dock [data-pane]')) b.setAttribute('aria-expanded', String(b.dataset.pane === toolView.tool));
+  for (const el of $$('.tool .pane')) el.toggleAttribute('data-active', Boolean(toolView.tool) && el.id === paneId(toolView.tool));
+
+  const t = toolView.tool;
+  if (t) {
+    $('#toolTitle').textContent = toolLabel(t);
+    const pop = $('#toolPop');
+    const label = toolView.popped ? 'Dock beside the console' : 'Pop out';
+    pop.setAttribute('aria-label', label);
+    pop.title = label;
+    pop.querySelector('use').setAttribute('href', toolView.popped ? '#i-dockin' : '#i-popout');
   }
-  for (const el of $$('.pane')) el.toggleAttribute('data-active', el.id === 'pane' + pane[0].toUpperCase() + pane.slice(1));
-  if (pane === 'settings') renderServerSettings();
-  if (pane === 'backups') renderBackups();
-  if (pane === 'scheduler') renderScheduler();
-  if (pane === 'players') renderPlayers();
-  if (pane === 'plugins') renderPlugins();
-  if (pane === 'worlds') renderWorlds();
-  if (pane === 'performance') renderPerformance();
-  // Only the visible tab polls. A graph nobody is looking at is a request every ten seconds
+  if (t === 'settings') renderServerSettings();
+  if (t === 'backups') renderBackups();
+  if (t === 'scheduler') renderScheduler();
+  if (t === 'players') renderPlayers();
+  if (t === 'plugins') renderPlugins();
+  if (t === 'worlds') renderWorlds();
+  if (t === 'performance') renderPerformance();
+  // Only a visible Stats tool polls. A graph nobody is looking at is a request every ten seconds
   // for as long as the app is open.
-  if (pane !== 'performance') stopPerfPolling();
-  // Scroll position is not kept while a pre is hidden, so the console has to be put back where it
-  // was - and "at the bottom" is where it was for anyone who had not scrolled up.
-  if (pane === 'console' && state.atBottom) {
+  if (t !== 'performance') stopPerfPolling();
+
+  if (toolView.popped) {
+    updateConMini();
+  } else if (state.atBottom) {
+    // Scroll position is not kept while a pre is hidden, so the console has to be put back where
+    // it was - and "at the bottom" is where it was for anyone who had not scrolled up.
     const log = $('#log');
     log.scrollTop = log.scrollHeight;
   }
+  rememberTool();
 }
 
-for (const b of $$('.srv-nav [data-pane]')) b.onclick = () => showPane(b.dataset.pane);
+/**
+ * Show one part of the selected server - the name every finding and shortcut in the panel already
+ * calls. 'console' means make the console visible: a popped-out tool goes back beside it, and a
+ * docked one lying over it at a narrow width closes.
+ */
+function showPane(pane) {
+  if (pane === 'console') {
+    if (toolView.popped) setTool(toolView.tool, false);
+    if (toolView.tool && NARROW.matches) setTool(null);
+    return;
+  }
+  if (toolView.tool === pane) return;
+  setTool(pane, POPPED_BY_DEFAULT.has(pane));
+}
+
+// Pressing the open tool's button again closes it; the console takes the width back.
+for (const b of $$('.dock [data-pane]')) {
+  b.onclick = () => {
+    const tool = b.dataset.pane;
+    if (toolView.tool === tool) setTool(null);
+    else setTool(tool, POPPED_BY_DEFAULT.has(tool));
+  };
+}
+
+function closeTool() {
+  const was = toolView.tool;
+  setTool(null);
+  // Focus goes back to the button that opened it, not to the top of the page with the panel gone.
+  if (was) $('#' + dockId(was))?.focus();
+}
+
+$('#toolClose').onclick = closeTool;
+$('#toolPop').onclick = () => setTool(toolView.tool, !toolView.popped);
+$('#conMini').onclick = () => setTool(toolView.tool, false);
+$('#conMini').title = 'Show the console beside this tool';
+
+/** The console's one line while a tool fills its space: its newest line and how many errors. */
+function updateConMini() {
+  if (!toolView.popped) return;
+  const last = state.lines.length ? state.lines[state.lines.length - 1].text : '';
+  $('#conMiniLast').textContent = last;
+  $('#conMiniErr').textContent = levelCounts.error
+    ? levelCounts.error + (levelCounts.error === 1 ? ' error' : ' errors') : '';
+}
+
+// ------------------------------------------------------------------ sheets ---
 
 /*
-  Arrow keys move between sections; Home and End jump to the ends.
+  Where each sheet was opened from, so closing it goes back there - and focus with it.
 
-  Required by the roving tabindex above - with only the selected section reachable by Tab, there
-  has to be another way to reach the rest. Both axes are accepted rather than only the one matching
-  the current orientation, because the list is a column at most sizes and a row at small ones, and
-  a key that works in one layout and not the other is worse than one that always works.
+  A modal <dialog> does this on its own; the sheets - Add a server, Preferences, Feedback - are views
+  in the stage, not dialogs, and when one closed the element that had focus was gone with it. Focus
+  fell to the body, and the next Tab started from the top of the page. Feedback opens from inside
+  Preferences, so this is a stack: closing Feedback returns to Preferences, not past it.
 */
-$('.srv-nav').addEventListener('keydown', (e) => {
-  const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
-  const buttons = $$('.srv-nav [data-pane]');
-  const at = buttons.indexOf(document.activeElement);
-  if (at < 0) return;
-
-  let next = null;
-  if (step) next = buttons[(at + step + buttons.length) % buttons.length];
-  else if (e.key === 'Home') next = buttons[0];
-  else if (e.key === 'End') next = buttons[buttons.length - 1];
-  if (!next) return;
-
-  e.preventDefault();
-  // Selection follows focus, which is the expected behaviour when showing a panel is instant and
-  // has no side effects - and switching section here only ever draws.
-  showPane(next.dataset.pane);
-  next.focus();
-});
-
-/** Back out of a sheet to wherever the person was. */
-/*
-  Where focus was when a sheet opened, so closing it can put focus back there.
-
-  A modal <dialog> does this on its own; the sheets - Add a server, Settings, Feedback - are views
-  in the stage, not dialogs, and when one closed the element that had focus was gone with it.
-  Focus fell to the body, and the next Tab started from the top of the page. The button that
-  opened the sheet is where a keyboard user expects to be standing when it closes.
-*/
-let sheetOpener = null;
+const sheetStack = [];
 
 function openSheet(view, prepare) {
-  sheetOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  if (state.view !== view) {
+    sheetStack.push({ from: state.view, opener: document.activeElement instanceof HTMLElement ? document.activeElement : null });
+  }
   if (prepare) prepare();
   show(view);
 }
 
+const SHEETS = new Set(['add', 'settings', 'feedback']);
+
+/** Back out of a sheet to wherever the person was. */
 function back() {
-  const opener = sheetOpener;
-  sheetOpener = null;
-  if (!state.current) { show('empty'); renderEmptyFor(state.rows.concat(state.dbs)); }
-  else if (state.streamName === state.current) {
+  const entry = sheetStack.pop() || { from: null, opener: null };
+  if (SHEETS.has(entry.from)) {
+    show(entry.from);
+  } else if (!state.current) {
+    show('empty');
+    renderEmptyFor(state.rows.concat(state.dbs));
+  } else if (state.streamName === state.current) {
     show('server');
     renderServer(rowOf(state.current));
   } else {
     select(state.current);
   }
-  if (opener && opener.isConnected) opener.focus();
+  if (entry.opener && entry.opener.isConnected) entry.opener.focus();
 }
 
 // -------------------------------------------------------------- servers ----
@@ -2560,7 +2838,7 @@ const STATE_TEXT = {
 const STATE_NOTE = {
   orphaned: ['Orphaned', 'The Java process is still running but the supervisor that owned it is gone, so SpawnLoft can no longer talk to it. Stop it with "mcctl kill" in a terminal, then start it again here.'],
   stale: ['Stale state', 'A leftover state file from a session that did not shut down cleanly. Starting the server clears it.'],
-  unknown: ['Unavailable', 'SpawnLoft could not read this server\u2019s state. Its folder may have been moved or deleted.'],
+  unknown: ['Unavailable', 'SpawnLoft could not read this server’s state. Its folder may have been moved or deleted.'],
   unreachable: ['Unreachable', 'This database runs elsewhere and is not answering at its address. Start it there, or check the host, port and password under Settings.'],
 };
 
@@ -2575,71 +2853,86 @@ function duration(ms) {
   return Math.floor(h / 24) + 'd ' + (h % 24) + 'h';
 }
 
-/*
-  The fold is the person's choice and it is remembered, per browser rather than per server: it is
-  a preference about the window, not about anything in it. localStorage can be missing or refuse
-  (a locked-down profile, a private window), and a list that fails to remember is still a list.
-*/
-const RAIL_KEY = 'mcctl.rail';
-function setRail(on, { remember = true } = {}) {
-  document.body.classList.toggle('rail', on);
-  const b = $('#bRail');
-  b.setAttribute('aria-expanded', String(!on));
-  const label = on ? 'Expand the server list' : 'Collapse the server list';
-  b.setAttribute('aria-label', label);
-  b.title = label;
-  if (!remember) return;
-  try { localStorage.setItem(RAIL_KEY, on ? '1' : '0'); } catch { /* a list that cannot remember is still a list */ }
-}
-$('#bRail').onclick = () => setRail(!document.body.classList.contains('rail'));
-try { setRail(localStorage.getItem(RAIL_KEY) === '1', { remember: false }); } catch { /* same */ }
+/** A crash is a stop nobody asked for. It stays said until the next start. */
+const crashedNow = (row) => Boolean(row && row.crashed) && row.status !== 'running';
 
-function buildCard(row) {
+// ------------------------------------------------------------ server tabs ---
+
+function buildTab(row) {
   const el = document.createElement('button');
   el.type = 'button';
-  el.className = 'card';
+  el.className = 'stab';
   el.dataset.name = row.name;
   if (isDb(row)) el.dataset.kind = 'database';
-  el.setAttribute('role', 'listitem');
   const lamp = document.createElement('span');
   lamp.className = 'lamp';
   const nm = document.createElement('span');
   nm.className = 'nm';
-  const vitals = document.createElement('span');
-  vitals.className = 'vitals';
-  el.append(lamp, nm, vitals);
-  el.onclick = () => select(el.dataset.name);
+  const note = document.createElement('span');
+  note.className = 'note';
+  el.append(lamp, nm, note);
+  el.onclick = () => openServer(el.dataset.name);
   return el;
 }
 
-function updateCard(el, row) {
-  el.dataset.status = row.status;
-  el.setAttribute('aria-current', String(row.name === state.current));
-  el.querySelector('.nm').textContent = row.label || row.name;
-
-  const vitals = el.querySelector('.vitals');
-  vitals.textContent = '';
-  const tail = isDb(row)
-    ? (row.external
-      ? ' \u00b7 ' + (row.engineLabel || row.engine) + ' \u00b7 ' + (row.host || '127.0.0.1') + ':' + (row.port || '?')
-      : ' \u00b7 ' + (row.engineLabel || row.engine) + ' ' + (row.version || '') + ' \u00b7 :' + (row.port || '?'))
-    : ' \u00b7 :' + (row.port || '?') + ' \u00b7 ' + (row.memory || '?');
-  if (row.status === 'running' && row.startedAt) {
-    const up = document.createElement('span');
-    up.className = 'on';
-    up.dataset.since = String(row.startedAt);
-    up.textContent = duration(Date.now() - row.startedAt);
-    vitals.append(up, document.createTextNode(tail));
-  } else {
-    vitals.append(document.createTextNode((STATE_TEXT[row.status] ?? row.status) + tail));
+/** The small word beside a tab's name: who is on while it runs, and "crashed" after a crash. */
+function tabNote(row) {
+  if (isDb(row)) return null;
+  if (row.status === 'running') {
+    const n = row.latest && row.latest.players;
+    if (n == null) return null;
+    return { text: String(n), title: n === 1 ? '1 player online' : n + ' players online' };
   }
-  el.title = row.name + ' — ' + (STATE_TEXT[row.status] ?? row.status) + (row.jar ? ' — ' + row.jar : '')
-    + (row.onlineMode === false ? ' — offline mode' : '');
-  el.classList.toggle('offline', row.onlineMode === false);
+  if (crashedNow(row)) return { text: 'crashed', tone: 'fault', title: 'Crashed' };
+  return null;
 }
 
+function updateTab(el, row) {
+  el.dataset.status = row.status;
+  el.toggleAttribute('data-crashed', crashedNow(row));
+  el.querySelector('.nm').textContent = row.label || row.name;
+  const note = tabNote(row);
+  const noteEl = el.querySelector('.note');
+  noteEl.textContent = note ? note.text : '';
+  if (note && note.tone) noteEl.dataset.tone = note.tone;
+  else delete noteEl.dataset.tone;
+  const said = crashedNow(row) ? 'Crashed' : (STATE_TEXT[row.status] ?? row.status);
+  el.title = (row.label || row.name) + ' — ' + said
+    + (note && note.title && !note.tone ? ' — ' + note.title : '')
+    + (row.onlineMode === false ? ' — offline mode' : '');
+  // Read out as a sentence rather than the spans run together: "Survival, running, 2 players
+  // online", not "Survival2".
+  el.setAttribute('aria-label', [row.label || row.name, said.toLowerCase(), note && note.title && !note.tone ? note.title : '']
+    .filter(Boolean).join(', '));
+}
+
+function markTabs() {
+  $('#tabHome').setAttribute('aria-current', state.current ? 'false' : 'page');
+  for (const el of $$('#list .stab[data-name]')) {
+    el.setAttribute('aria-current', el.dataset.name === state.current ? 'page' : 'false');
+  }
+}
+
+/** Fade whichever edge of the strip has more tabs beyond it. */
+function updateTabFade() {
+  const strip = $('#list');
+  const beyond = strip.scrollWidth - strip.clientWidth - strip.scrollLeft;
+  strip.classList.toggle('fade-l', strip.scrollLeft > 2);
+  strip.classList.toggle('fade-r', beyond > 2);
+}
+$('#list').addEventListener('scroll', updateTabFade, { passive: true });
+window.addEventListener('resize', updateTabFade);
+// A mouse wheel only turns vertically. On a strip that only scrolls sideways, that is what it means.
+$('#list').addEventListener('wheel', (e) => {
+  if (!e.deltaY || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+  const strip = $('#list');
+  if (strip.scrollWidth <= strip.clientWidth) return;
+  strip.scrollLeft += e.deltaY;
+  e.preventDefault();
+}, { passive: false });
+
 /**
- * Reconcile the list against the DOM rather than rewriting it.
+ * Reconcile the tabs against the DOM rather than rewriting them.
  *
  * The old panel rebuilt innerHTML every four seconds, which threw away focus, text selection and
  * scroll position on a timer. Keyed updates leave whatever is being touched alone.
@@ -2647,108 +2940,410 @@ function updateCard(el, row) {
 function renderList(rows, dbs) {
   dbs = dbs || [];
   const list = $('#list');
-  $('#count').textContent = rows.length ? String(rows.length) : '';
   document.body.classList.toggle('bare', rows.length === 0 && dbs.length === 0);
 
-  if (!rows.length && !dbs.length) {
-    if (!list.querySelector('.side-empty')) {
-      list.textContent = '';
-      const p = document.createElement('div');
-      p.className = 'side-empty';
-      p.textContent = 'Nothing registered yet.';
-      list.append(p);
-    }
-    return;
-  }
-  const placeholder = list.querySelector('.side-empty');
-  if (placeholder) placeholder.remove();
-
-  // Servers, then a small heading, then the databases: one list, keyed by name, so the same
-  // reconciliation keeps focus and scroll while the databases sit under their own label.
+  // Overview first, the servers, then a hairline and the databases.
   const seen = new Set();
-  const order = [...rows];
-  if (dbs.length) order.push({ divider: 'Databases' }, ...dbs);
+  const order = [{ home: true }, ...rows];
+  if (dbs.length) order.push({ divider: true }, ...dbs);
   order.forEach((row, i) => {
     let el;
-    if (row.divider) {
-      el = list.querySelector('.side-sub');
+    if (row.home) {
+      el = $('#tabHome');
+    } else if (row.divider) {
+      el = list.querySelector('.tabs-div');
       if (!el) {
-        el = document.createElement('div');
-        el.className = 'side-sub';
-        el.textContent = row.divider;
+        el = document.createElement('span');
+        el.className = 'tabs-div';
+        el.setAttribute('aria-hidden', 'true');
       }
     } else {
       seen.add(row.name);
       el = list.querySelector('[data-name="' + CSS.escape(row.name) + '"]');
-      if (!el) el = buildCard(row);
-      updateCard(el, row);
+      if (!el) el = buildTab(row);
+      updateTab(el, row);
     }
     if (list.children[i] !== el) list.insertBefore(el, list.children[i] || null);
   });
   for (const el of Array.from(list.children)) {
     if (el.dataset.name && !seen.has(el.dataset.name)) el.remove();
-    if (el.classList.contains('side-sub') && !dbs.length) el.remove();
+    if (el.classList.contains('tabs-div') && !dbs.length) el.remove();
   }
+  markTabs();
+  updateTabFade();
+}
+
+/** A tab was pressed. The server already open behind a sheet just comes back to the front. */
+function openServer(name) {
+  if (name === state.current && state.streamName === name) {
+    sheetStack.length = 0;
+    show('server');
+    renderServer(rowOf(name));
+    markTabs();
+    return;
+  }
+  select(name);
+}
+
+/** The Overview tab. Until the Overview screen exists it is the "pick a server" screen. */
+function goHome() {
+  sheetStack.length = 0;
+  stopStream();
+  stopVitals();
+  stopPerfPolling();
+  state.current = null;
+  show('empty');
+  renderEmptyFor(state.rows.concat(state.dbs));
+  markTabs();
+}
+$('#tabHome').onclick = goHome;
+
+// ------------------------------------------------------------ server strip ---
+
+/** The state as a pill in its own tones. "Starting…" is the panel's word: the core says running. */
+function renderStatePill(row) {
+  const st = $('#srvState');
+  delete st.dataset.since;
+  let tone = '';
+  let text = STATE_TEXT[row.status] ?? row.status;
+  if (state.acting === 'start' || state.acting === 'restart') {
+    tone = 'warn';
+    text = state.acting === 'restart' ? 'Restarting…' : 'Starting…';
+  } else if (row.status === 'running' && !isDb(row)) {
+    tone = 'live';
+    if (row.startedAt) {
+      st.dataset.since = String(row.startedAt);
+      text = 'Running · ' + duration(Date.now() - row.startedAt);
+    }
+  } else if (row.status === 'running' || row.status === 'reachable') {
+    tone = 'live';
+  } else if (crashedNow(row)) {
+    tone = 'fault';
+    text = 'Crashed';
+  } else if (row.status === 'stopping' || row.status === 'stale') {
+    tone = 'warn';
+  } else if (row.status === 'orphaned' || row.status === 'unknown' || row.status === 'unreachable') {
+    tone = 'fault';
+  }
+  st.textContent = text;
+  if (tone) st.dataset.tone = tone;
+  else delete st.dataset.tone;
+}
+
+const FILE_MANAGER = panelPlatform === 'darwin' ? 'Finder' : panelPlatform === 'win32' ? 'Explorer' : 'your file manager';
+
+/** Software and version, the address to connect to, and the Java it runs on. */
+function renderMeta(row) {
+  const meta = $('#srvMeta');
+  meta.textContent = '';
+  const parts = [];
+  const text = (s) => document.createTextNode(s);
+  const addr = (s) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'addr';
+    b.textContent = s;
+    b.title = 'Copy ' + s;
+    b.onclick = () => copyText(s, s);
+    return b;
+  };
+  if (isDb(row)) {
+    parts.push(text((row.engineLabel || row.engine) + (row.version ? ' ' + row.version : '') + (row.external ? ', runs elsewhere' : '')));
+    parts.push(addr((row.host || '127.0.0.1') + ':' + (row.port || '?')));
+  } else {
+    const sw = softwareById[row.loader ?? 'paper'];
+    parts.push(text((sw ? sw.label : (row.loader || 'Paper')) + (row.mcVersion ? ' ' + row.mcVersion : '')));
+    parts.push(addr('localhost:' + (row.port || '?')));
+    const jv = javaMajorFor(row);
+    if (jv) parts.push(text('Java ' + jv));
+  }
+  parts.forEach((p, i) => {
+    if (i) {
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.setAttribute('aria-hidden', 'true');
+      dot.textContent = '·';
+      meta.append(dot);
+    }
+    meta.append(p);
+  });
+}
+
+/*
+  Which Java each server runs on, by the path in its registry entry. Asked once: finding every Java
+  on a machine starts a process per candidate, which is not something to repeat on a timer.
+*/
+const javaView = { found: null, onPath: null };
+
+async function loadJavas() {
+  try {
+    const data = await api('/java');
+    javaView.found = data.found || [];
+    javaView.onPath = data.onPath;
+  } catch {
+    return;
+  }
+  const row = rowOf(state.current);
+  if (row && state.view === 'server') renderMeta(row);
+}
+
+function javaMajorFor(row) {
+  if (!javaView.found) return null;
+  const bin = row.java || 'java';
+  if (bin === 'java') return javaView.onPath ? javaView.onPath.major : null;
+  const hit = javaView.found.find((j) => j.path === bin);
+  return hit ? hit.major : null;
+}
+
+// ------------------------------------------------------------------ vitals ---
+
+/*
+  The four numbers under a running server's name. Players, TPS and memory come with the server
+  list, from the newest reading the daemon took; the TPS sparkline wants ten minutes of history and
+  the last backup wants the snapshot list, so those two are asked for here, for the one server on
+  screen, at a pace that matches how fast they change.
+*/
+const vitalsView = { name: null, samples: [], backupAt: null, backupAsked: 0 };
+let vitalsTimer = null;
+
+function stopVitals() {
+  clearInterval(vitalsTimer);
+  vitalsTimer = null;
+}
+
+function startVitals(name) {
+  stopVitals();
+  vitalsView.name = name;
+  vitalsView.samples = [];
+  vitalsView.backupAt = undefined;
+  vitalsView.backupAsked = 0;
+  pollVitals(name);
+  vitalsTimer = setInterval(() => pollVitals(name), 10000);
+}
+
+async function pollVitals(name) {
+  if (document.hidden || state.current !== name || state.view !== 'server') return;
+  const row = rowOf(name);
+  if (!row || isDb(row)) return;
+  const base = '/instances/' + encodeURIComponent(name);
+  const asks = [];
+  if (row.status === 'running') {
+    asks.push(api(base + '/metrics?seconds=600').then((d) => {
+      vitalsView.samples = (d && d.samples) || [];
+    }, () => {}));
+  }
+  // A backup is minutes apart at the closest; once a minute is plenty.
+  if (Date.now() - vitalsView.backupAsked > 60000) {
+    vitalsView.backupAsked = Date.now();
+    asks.push(api(base + '/backups/history').then((d) => {
+      const newest = d && d.snapshots && d.snapshots[0];
+      vitalsView.backupAt = newest ? new Date(newest.mtime).getTime() : null;
+    }, () => {}));
+  }
+  await Promise.all(asks);
+  if (state.current === name && state.view === 'server' && vitalsView.name === name) renderVitals(rowOf(name));
+}
+
+/** "now", "12m", "3h", "4d": how long ago, in the one unit that matters at that distance. */
+function shortAgo(ms) {
+  const s = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+  if (s < 60) return 'now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + 'm';
+  const h = Math.floor(m / 60);
+  if (h < 48) return h + 'h';
+  return Math.floor(h / 24) + 'd';
+}
+
+/** A line with no axes, the width of a word: whether a number has been steady, at a glance. */
+function sparkline(values, max) {
+  const el = svg('svg', { class: 'spark', viewBox: '0 0 64 18', preserveAspectRatio: 'none', 'aria-hidden': 'true' });
+  if (values.length < 2) return el;
+  const step = 64 / (values.length - 1);
+  const points = values.map((v, i) => (i * step).toFixed(1) + ',' + (17 - Math.min(1, Math.max(0, v / max)) * 16).toFixed(1));
+  el.append(svg('polyline', { points: points.join(' ') }));
+  return el;
+}
+
+function vitalCell(key, label, title) {
+  const wrap = document.createElement('div');
+  wrap.className = 'vital';
+  wrap.dataset.v = key;
+  if (title) wrap.title = title;
+  const dt = document.createElement('dt');
+  dt.textContent = label;
+  const dd = document.createElement('dd');
+  wrap.append(dt, dd);
+  return { wrap, dd };
+}
+
+function bigNumber(dd, value, of) {
+  const big = document.createElement('span');
+  big.className = 'big';
+  big.textContent = value;
+  dd.append(big);
+  if (of) {
+    const small = document.createElement('span');
+    small.className = 'of';
+    small.textContent = of;
+    dd.append(small);
+  }
+}
+
+function renderVitals(row) {
+  const dl = $('#srvVitals');
+  dl.textContent = '';
+  const live = row.status === 'running';
+  const latest = live ? row.latest : null;
+
+  if (isDb(row)) {
+    dl.dataset.count = '2';
+    const attached = Object.keys(row.attachments || {});
+    const mem = vitalCell('memory', 'Memory', 'The whole database process');
+    if (latest && Number.isFinite(latest.rss)) {
+      const gb = latest.rss >= 1024;
+      bigNumber(mem.dd, gb ? (latest.rss / 1024).toFixed(1) : String(latest.rss), gb ? 'GB' : 'MB');
+    } else bigNumber(mem.dd, '—');
+    const att = vitalCell('attached', 'Attached', attached.join(', '));
+    const t = document.createElement('span');
+    t.className = 'txt';
+    t.textContent = attached.length ? attached.join(', ') : 'nothing yet';
+    att.dd.append(t);
+    dl.append(mem.wrap, att.wrap);
+    return;
+  }
+  delete dl.dataset.count;
+
+  const players = vitalCell('players', 'Players',
+    live && latest == null ? 'Waiting for the server to answer over RCON' : '');
+  if (latest && latest.players != null) bigNumber(players.dd, String(latest.players), latest.maxPlayers != null ? '/ ' + latest.maxPlayers : '');
+  else bigNumber(players.dd, '—');
+
+  const tps = vitalCell('tps', 'TPS', 'Ticks per second over the last minute; 20 is full speed');
+  if (latest && latest.tps != null) {
+    bigNumber(tps.dd, latest.tps.toFixed(1));
+    const history = vitalsView.name === row.name ? vitalsView.samples.filter((s) => s.tps != null).map((s) => s.tps) : [];
+    tps.dd.append(sparkline(history, 20));
+  } else bigNumber(tps.dd, '—');
+
+  const ceiling = memoryCeilingMb(row.memory);
+  const memory = vitalCell('memory', 'Memory',
+    'The whole java process. It can sit above the ' + (row.memory || 'heap') + ' heap limit; that is normal.');
+  if (latest && Number.isFinite(latest.rss)) {
+    // Gigabytes once there is a gigabyte to count; "0.0 GB" for a server that is still warming up
+    // says it uses nothing, which is not true.
+    const gb = latest.rss >= 1024;
+    const allotted = ceiling ? '/ ' + +(ceiling / 1024).toFixed(1) + ' GB' : 'GB';
+    bigNumber(memory.dd, gb ? (latest.rss / 1024).toFixed(1) : String(latest.rss), gb ? allotted : 'MB ' + allotted);
+    if (ceiling) {
+      const meter = document.createElement('span');
+      meter.className = 'meter';
+      const share = Math.min(1, latest.rss / ceiling);
+      if (share > 0.9) meter.dataset.tone = 'warn';
+      const fill = document.createElement('i');
+      fill.style.width = (share * 100).toFixed(1) + '%';
+      meter.append(fill);
+      memory.dd.append(meter);
+    }
+  } else bigNumber(memory.dd, '—');
+
+  const backup = vitalCell('backup', 'Last backup');
+  if (vitalsView.name !== row.name || vitalsView.backupAt === undefined) bigNumber(backup.dd, '…');
+  else if (vitalsView.backupAt === null) bigNumber(backup.dd, 'Never');
+  else {
+    bigNumber(backup.dd, shortAgo(vitalsView.backupAt), shortAgo(vitalsView.backupAt) === 'now' ? '' : 'ago');
+    backup.wrap.title = stamp(new Date(vitalsView.backupAt).toISOString());
+  }
+
+  dl.append(players.wrap, tps.wrap, memory.wrap, backup.wrap);
+}
+
+// -------------------------------------------------------------- the menu ---
+
+/*
+  "⋯": the rest of what can be done to a server, behind one button so Start and Stop stand alone.
+  The items that need the server stopped say so rather than disappearing.
+*/
+function moreItems(row) {
+  if (isDb(row)) {
+    return [
+      { label: 'Manage this database…', hint: 'Rename it, see its credentials, or delete it.', run: () => manageDatabase(row) },
+    ];
+  }
+  const up = row.status === 'running' || row.status === 'stopping';
+  const why = up ? 'Stop the server first.' : null;
+  return [
+    { label: 'Open folder', hint: 'Shows the server’s files in ' + FILE_MANAGER + '.', run: () => openFolder(row.name) },
+    { label: 'Upgrade…', hint: 'A newer build, or a newer Minecraft version, under Server software.', run: () => openUpgrade() },
+    'sep',
+    { label: 'Rename, memory and port…', hint: why || 'Takes effect the next time it starts.', run: () => editServer(row), disabled: up },
+    { label: 'Reset the world…', hint: why || 'Deletes worlds and generated state. A snapshot is taken first.', run: () => rebuildServer(row), disabled: up },
+    { label: 'Delete this server…', hint: why || 'Removes it from SpawnLoft, and optionally its files.', run: () => deleteServer(row), disabled: up },
+  ];
+}
+
+function buildMoreMenu() {
+  const menu = $('#moreMenu');
+  menu.textContent = '';
+  const row = rowOf(state.current);
+  if (!row) return;
+  for (const item of moreItems(row)) {
+    if (item === 'sep') {
+      const sep = document.createElement('div');
+      sep.className = 'menu-sep';
+      sep.setAttribute('role', 'separator');
+      menu.append(sep);
+      continue;
+    }
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'menuitem');
+    b.tabIndex = -1;
+    b.disabled = Boolean(item.disabled);
+    const title = document.createElement('b');
+    title.textContent = item.label;
+    const hint = document.createElement('span');
+    hint.textContent = item.hint;
+    b.append(title, hint);
+    b.onclick = () => { moreMenu.close({ refocus: true }); item.run(); };
+    menu.append(b);
+  }
+}
+
+/** Upgrading lives with the rest of the server's software, in Settings. */
+async function openUpgrade() {
+  setTool('settings', toolView.tool === 'settings' ? toolView.popped : POPPED_BY_DEFAULT.has('settings'));
+  await renderServerSettings();
+  const soft = $$('#settingsBody .set-head h3').find((h) => h.textContent === 'Server software');
+  if (soft) soft.closest('.set-group').scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 
 function renderServer(row) {
   if (!row) return;
+  const db = isDb(row);
   $('#vServer').dataset.status = row.status;
+  $('#vServer').toggleAttribute('data-crashed', crashedNow(row));
   $('#srvName').textContent = row.label || row.name;
   // The name the commands and the folder use, shown only when it is not the same word.
   $('#srvId').textContent = row.name;
   $('#srvId').hidden = !row.label || row.label === row.name;
-  // The same tab manages plugins/ on a Paper server and mods/ on a modded one; its name
+  // The same tool manages plugins/ on a Paper server and mods/ on a modded one; its name
   // follows, because "Plugins" on a server that cannot load any would be a small lie.
   // Named for what the software loads, from the same table the create form uses. Anything the
   // table does not know - a page loaded before it answered - reads as plugins, which is what
   // every server was before there were mod loaders.
   const content = (softwareById[row.loader ?? 'paper'] || softwareById.paper).content;
-  $('#tabPlugins').lastChild.nodeValue = content === 'mods' ? 'Mods' : 'Plugins';
+  $('#tabPlugins .lbl').textContent = content === 'mods' ? 'Mods' : 'Plugins';
+  if (toolView.tool === 'plugins') $('#toolTitle').textContent = toolLabel('plugins');
+  renderDockBadge();
 
-  const st = $('#srvState');
-  if (row.status === 'running' && row.startedAt) {
-    st.dataset.since = String(row.startedAt);
-    st.textContent = 'Running \u00b7 up ' + duration(Date.now() - row.startedAt);
-  } else {
-    delete st.dataset.since;
-    st.textContent = STATE_TEXT[row.status] ?? row.status;
-  }
+  renderStatePill(row);
+  renderMeta(row);
+  renderVitals(row);
 
-  // A database has three of the eight sections: no plugins, worlds, backups, players or tasks
-  // of its own. The tabs that do not apply are hidden rather than left to show a blank pane.
-  const db = isDb(row);
-  for (const id of ['tabPlugins', 'tabWorlds', 'tabBackups', 'tabPlayers', 'tabScheduler']) $('#' + id).hidden = db;
-
-  const vitals = $('#srvVitals');
-  vitals.textContent = '';
-  const attached = db ? Object.keys(row.attachments || {}) : [];
-  const pairs = db ? [
-    ['Port', ':' + (row.port || '?')],
-    ['Engine', (row.engineLabel || row.engine) + ' ' + (row.version || '') + (row.external ? ' (runs elsewhere)' : '')],
-    ['Host', row.host || '127.0.0.1'],
-    ['Attached', attached.length ? attached.join(', ') : 'nothing yet'],
-  ] : [
-    ['Port', ':' + (row.port || '?')],
-    ['Memory', row.memory || '?'],
-    ['World', row.levelName || '—'],
-    ['Server jar', row.jar || '—'],
-    ['RCON', row.rconPort ? ':' + row.rconPort : '—'],
-  ];
-  if (row.status === 'running' && row.javaPid) pairs.push([db ? 'PID' : 'Java PID', String(row.javaPid)]);
-  if (row.status === 'stopped' && row.exitCode != null) pairs.push(['Last exit', 'code ' + row.exitCode]);
-  for (const pair of pairs) {
-    const wrap = document.createElement('div');
-    wrap.className = 'vital';
-    wrap.title = pair[1];
-    if (pair[0] === 'Server jar') wrap.dataset.wide = '';
-    const dt = document.createElement('dt');
-    dt.textContent = pair[0];
-    const dd = document.createElement('dd');
-    dd.textContent = pair[1];
-    wrap.append(dt, dd);
-    vitals.append(wrap);
-  }
+  // A database has two of the seven tools. The ones that do not apply are hidden rather than left
+  // to open a blank panel.
+  for (const b of $$('.dock [data-pane]')) b.hidden = db && !DB_TOOLS.has(b.dataset.pane);
 
   $('#srvOffline').hidden = row.onlineMode !== false;
 
@@ -2766,21 +3361,25 @@ function renderServer(row) {
     }));
   }
 
-  // A control that is going to be refused should look refused. The core rejects these on a live
-  // server, so the panel says so before the round trip rather than after it.
+  // The verbs follow the state: a running server offers Restart and Stop, a stopped one Start, so
+  // there is only ever one primary button. A control that is going to be refused looks refused -
+  // the core rejects these on a live server, so the panel says so before the round trip.
   const live = row.status === 'running';
+  const up = live || row.status === 'stopping';
   const external = Boolean(row.external);
-  $('#bStart').disabled = state.busy || live || row.status === 'stopping' || external;
+  $('#bStart').hidden = up;
+  $('#bStop').hidden = !up;
+  $('#bRestart').hidden = !up;
+  $('#bStart').disabled = state.busy || external;
   $('#bStop').disabled = state.busy || !live || external;
-  $('#bRestart').disabled = state.busy || row.status === 'stopping' || external;
-  $('#bFolder').disabled = external;
+  $('#bRestart').disabled = state.busy || !live || external;
   $('#bStart').title = external ? 'This database runs elsewhere; it is not started from here' : '';
   $('#bManage').disabled = state.busy;
   $('#cmd').disabled = !live || db;
   $('#bSend').disabled = !live || db;
   $('#cmd').placeholder = db
     ? 'A database takes no console commands — use its client, or the credentials under Settings'
-    : live ? 'Send a server command — try list' : 'Start the server to send commands';
+    : live ? 'Type a command — ↑ recalls' : 'Start the server to send commands';
 
   // The diagnoses are Minecraft's failure shapes; a database's console has its own.
   if (db) { $('#srvDiag').textContent = ''; diagKey = ''; } else loadDiagnosis(row);
@@ -2941,9 +3540,9 @@ async function loadDiagnosis(row) {
 function renderEmptyFor(rows) {
   if (rows.length) {
     $('#emptyTitle').textContent = 'Pick a server';
-    $('#emptyLede').textContent = 'Choose one on the left to see its console.';
+    $('#emptyLede').textContent = 'Choose one from the tabs above to see its console.';
     // The two doors are the whole point of the screen when there is nothing; once servers exist
-    // they are competing with the list, and "add another" already has a button in the sidebar.
+    // they are competing with the tabs, and "add another" already has its + beside them.
     $('#emptyDoors').hidden = true;
   } else {
     $('#emptyTitle').textContent = 'No servers yet';
@@ -3004,10 +3603,12 @@ async function refresh() {
   if (state.current && !rowOf(state.current)) {
     // Removed underneath us, by this panel or another one.
     stopStream();
+    stopVitals();
     state.current = null;
     if (state.view === 'server') show('empty');
   }
   renderList(rows, dbs);
+  renderJavaChip();
 
   if (!state.current) {
     if (state.view === 'empty') renderEmptyFor(rows.concat(dbs));
@@ -3023,7 +3624,7 @@ setInterval(() => {
     const since = Number(el.dataset.since);
     if (!since) continue;
     const text = duration(Date.now() - since);
-    el.textContent = el.id === 'srvState' ? 'Running \u00b7 up ' + text : text;
+    el.textContent = el.id === 'srvState' ? 'Running \u00b7 ' + text : text;
   }
 }, 1000);
 
@@ -3114,7 +3715,17 @@ function visible(entry) {
   return true;
 }
 
+/*
+  How many warnings and errors the console holds, beside the filters that would show them.
+  Counted by the line that raises one, not by every line of its stack trace: "Errors 1" for a
+  twenty-line exception is the answer to "how many things went wrong".
+*/
+const levelCounts = { warn: 0, error: 0 };
+const raisesLevel = (entry) => (entry.level === 'warn' || entry.level === 'error') && !CONT_RE.test(entry.text) && !EXC_RE.test(entry.text);
+
 function updateCount(shown) {
+  $('#nWarn').textContent = String(levelCounts.warn);
+  $('#nErr').textContent = String(levelCounts.error);
   const total = state.lines.length;
   const count = shown == null ? state.lines.filter(visible).length : shown;
   const filtered = state.filter !== 'all' || Boolean(state.search);
@@ -3163,6 +3774,8 @@ function pushLine(text) {
   const prev = state.lines.length ? state.lines[state.lines.length - 1].level : null;
   const entry = { text: text, level: levelOf(text, prev), n: ++state.seq };
   state.lines.push(entry);
+  if (raisesLevel(entry)) levelCounts[entry.level]++;
+  updateConMini();
 
   // A busy server writes thousands of lines a minute. Without a ceiling the panel keeps a DOM node
   // per line until the window stops responding - a bug that only appears after someone has left it
@@ -3170,6 +3783,7 @@ function pushLine(text) {
   const log = $('#log');
   while (state.lines.length > MAX_LINES) {
     const gone = state.lines.shift();
+    if (raisesLevel(gone)) levelCounts[gone.level]--;
     if (state.pausedAt > 0) state.pausedAt--;
     // Only drop a node if that line had one. With a filter on, most lines never reached the DOM.
     if (visible(gone)) {
@@ -3191,6 +3805,9 @@ function pushLine(text) {
 function clearLines() {
   state.lines = [];
   state.seq = 0;
+  levelCounts.warn = 0;
+  levelCounts.error = 0;
+  updateConMini();
 }
 
 function stopStream() {
@@ -3201,6 +3818,7 @@ function stopStream() {
 
 function select(name) {
   if (state.current === name && state.view === 'server' && state.streamName === name) return;
+  sheetStack.length = 0;
   state.current = name;
   clearLines();
   state.paused = false;
@@ -3209,8 +3827,7 @@ function select(name) {
   state.history = [];
   state.histAt = -1;
   state.search = '';
-  $('#bPause').setAttribute('aria-pressed', 'false');
-  $('#bPause').textContent = 'Pause';
+  setPauseButton(false);
   $('#conSearch').value = '';
   $('#bJump').hidden = true;
   setFilter('all');
@@ -3228,11 +3845,13 @@ function select(name) {
   $('#srvDiag').textContent = '';
   diagKey = '';
   const chosen = rowOf(name);
-  if (isDb(chosen) && !['console', 'performance', 'settings'].includes(state.pane)) state.pane = 'console';
   renderServer(chosen);
-  showPane(state.pane);
+  const saved = recallTool(name);
+  setTool(saved.tool, saved.popped);
   renderLog();
   renderList(state.rows, state.dbs);
+  $('#list [data-name="' + CSS.escape(name) + '"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  startVitals(name);
 
   // Server-Sent Events rather than polling: the console is a stream by nature, and the browser
   // reconnects on its own if the panel is left open while a server restarts.
@@ -3274,11 +3893,19 @@ $('#conSearch').oninput = (e) => {
   searchTimer = setTimeout(() => { state.search = value.trim(); renderLog(); }, 120);
 };
 
+/** The pause button is an icon; its name and its glyph say which it will do next. */
+function setPauseButton(paused) {
+  const b = $('#bPause');
+  const label = paused ? 'Resume' : 'Pause';
+  b.setAttribute('aria-pressed', String(paused));
+  b.setAttribute('aria-label', label);
+  b.title = label;
+  b.querySelector('use').setAttribute('href', paused ? '#i-play' : '#i-pause');
+}
+
 $('#bPause').onclick = () => {
   state.paused = !state.paused;
-  const b = $('#bPause');
-  b.setAttribute('aria-pressed', String(state.paused));
-  b.textContent = state.paused ? 'Resume' : 'Pause';
+  setPauseButton(state.paused);
   if (state.paused) {
     state.pausedAt = state.lines.length;
   } else {
@@ -3299,12 +3926,12 @@ const NUMS_KEY = 'mcctl.nums';
 function setNums(on, { remember = true } = {}) {
   state.nums = on;
   $('#log').classList.toggle('nums', on);
-  $('#bNums').setAttribute('aria-pressed', String(on));
+  $('#bNums').setAttribute('aria-checked', String(on));
   if (!remember) return;
   try { localStorage.setItem(NUMS_KEY, on ? '1' : '0'); } catch {}
 }
 
-$('#bNums').onclick = () => setNums(!state.nums);
+$('#bNums').onclick = () => { setNums(!state.nums); shareMenu.close({ refocus: true }); };
 
 try { setNums(localStorage.getItem(NUMS_KEY) === '1', { remember: false }); } catch {}
 
@@ -3333,6 +3960,7 @@ $('#bCopy').onclick = async () => {
 // Clears the VIEW, not the log on disk. Said out loud, because a Clear button next to a server
 // console could reasonably be read as destructive.
 $('#bClear').onclick = () => {
+  shareMenu.close({ refocus: true });
   clearLines();
   state.pausedAt = 0;
   state.atBottom = true;
@@ -3340,64 +3968,79 @@ $('#bClear').onclick = () => {
   toast('Console view cleared. The log file on disk is untouched.');
 };
 
-let exportMenuOpen = false;
+/**
+ * A button that opens a menu under it: Share log, and the "⋯" beside Start and Stop.
+ *
+ * <p>Keyboard first. The arrows move between items and open the menu from its button, Home and
+ * End jump to the ends, Escape closes it and puts focus back on the button, and Tab leaves - a
+ * menu that has to be dismissed before you can move on is a trap. `build` fills it at the moment
+ * it opens, for a menu whose items depend on the server's state.
+ */
+function bindMenu(button, menu, { build } = {}) {
+  const wrap = button.closest('.menu-wrap');
+  let open = false;
+  const items = () => Array.from(menu.querySelectorAll('[role^="menuitem"]')).filter((b) => !b.disabled);
 
-function exportItems() {
-  return [$('#miExportFile'), $('#miExportShare')];
+  const close = ({ refocus = false } = {}) => {
+    if (!open) return;
+    open = false;
+    menu.hidden = true;
+    button.setAttribute('aria-expanded', 'false');
+    if (refocus) button.focus();
+  };
+  const show = () => {
+    if (open) return;
+    if (build) build();
+    open = true;
+    menu.hidden = false;
+    button.setAttribute('aria-expanded', 'true');
+    const first = items()[0];
+    if (first) first.focus();
+  };
+
+  button.onclick = () => (open ? close({ refocus: true }) : show());
+
+  wrap.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && open) {
+      e.preventDefault();
+      e.stopPropagation();
+      close({ refocus: true });
+      return;
+    }
+    if (!open) {
+      if (e.target === button && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); show(); }
+      return;
+    }
+    const list = items();
+    if (!list.length) return;
+    const at = list.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); list[(at + 1 + list.length) % list.length].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); list[(at - 1 + list.length) % list.length].focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); list[0].focus(); }
+    else if (e.key === 'End') { e.preventDefault(); list[list.length - 1].focus(); }
+    else if (e.key === 'Tab') close();
+  });
+
+  wrap.addEventListener('focusout', (e) => {
+    if (!wrap.contains(e.relatedTarget)) close();
+  });
+
+  document.addEventListener('pointerdown', (e) => {
+    if (open && !wrap.contains(e.target)) close();
+  });
+
+  return { close };
 }
 
-function closeExportMenu({ refocus = false } = {}) {
-  if (!exportMenuOpen) return;
-  exportMenuOpen = false;
-  $('#exportMenu').hidden = true;
-  $('#bExport').setAttribute('aria-expanded', 'false');
-  if (refocus) $('#bExport').focus();
-}
-
-function openExportMenu() {
-  if (exportMenuOpen) return;
-  exportMenuOpen = true;
-  $('#exportMenu').hidden = false;
-  $('#bExport').setAttribute('aria-expanded', 'true');
-  exportItems()[0].focus();
-}
-
-$('#bExport').onclick = () => { exportMenuOpen ? closeExportMenu({ refocus: true }) : openExportMenu(); };
-
-$('.menu-wrap').addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && exportMenuOpen) {
-    e.preventDefault();
-    e.stopPropagation();
-    closeExportMenu({ refocus: true });
-    return;
-  }
-  if (!exportMenuOpen) {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); openExportMenu(); }
-    return;
-  }
-  const items = exportItems();
-  const at = items.indexOf(document.activeElement);
-  if (e.key === 'ArrowDown') { e.preventDefault(); items[(at + 1 + items.length) % items.length].focus(); }
-  else if (e.key === 'ArrowUp') { e.preventDefault(); items[(at - 1 + items.length) % items.length].focus(); }
-  else if (e.key === 'Home') { e.preventDefault(); items[0].focus(); }
-  else if (e.key === 'End') { e.preventDefault(); items[items.length - 1].focus(); }
-  else if (e.key === 'Tab') closeExportMenu();
-});
-
-$('.menu-wrap').addEventListener('focusout', (e) => {
-  if (!$('.menu-wrap').contains(e.relatedTarget)) closeExportMenu();
-});
-
-document.addEventListener('pointerdown', (e) => {
-  if (exportMenuOpen && !$('.menu-wrap').contains(e.target)) closeExportMenu();
-});
+const shareMenu = bindMenu($('#bExport'), $('#exportMenu'));
+const moreMenu = bindMenu($('#bManage'), $('#moreMenu'), { build: buildMoreMenu });
 
 function consolePath(verb) {
   return '/instances/' + encodeURIComponent(state.current) + '/console/' + verb;
 }
 
 $('#miExportFile').onclick = async () => {
-  closeExportMenu({ refocus: true });
+  shareMenu.close({ refocus: true });
   if (!state.current) { toast('Select a server first.', 'bad'); return; }
   const note = toast('Saving the console…');
   try {
@@ -3412,7 +4055,7 @@ $('#miExportFile').onclick = async () => {
 };
 
 $('#miExportShare').onclick = async () => {
-  closeExportMenu({ refocus: true });
+  shareMenu.close({ refocus: true });
   if (!state.current) { toast('Select a server first.', 'bad'); return; }
   const ok = await ask({
     title: 'Upload this console to mclo.gs?',
@@ -3463,6 +4106,9 @@ const act = (what) => async () => {
   const name = state.current;
   if (!name || state.busy) return;
   state.busy = true;
+  // What is under way, so the state pill can say "Starting…" through the wait rather than
+  // "Stopped" while the button that started it is already greyed out.
+  state.acting = what;
   renderServer(rowOf(name));
   const note = toast(ACTION_ING[what] + ' ' + name + '…');
   try {
@@ -3474,6 +4120,7 @@ const act = (what) => async () => {
     toast(e.message, 'bad');
   } finally {
     state.busy = false;
+    state.acting = null;
     await refresh();
   }
 };
@@ -3498,8 +4145,8 @@ $('#bRestart').onclick = act('restart');
  * wherever they are needed, and restyled from one place. `currentColor` means an icon inherits the
  * colour of whatever it sits in, so a danger button's icon turns red without anybody saying so.
  *
- * <p>Always aria-hidden. Every icon in this interface sits beside its own label - none of them is
- * the only thing saying what a control does - so announcing them would just read the same word
+ * <p>Always aria-hidden. An icon either sits beside its own word or is the whole of a button that
+ * carries an aria-label saying what it does, so announcing the glyph would only read the same thing
  * twice.
  */
 function icon(name, cls) {
@@ -3820,6 +4467,23 @@ async function paintPerformance(name, opts) {
     colour: '#8fd3a8',
   }));
 
+  // What the server says about itself, when it says it. Read over RCON by the daemon, so a server
+  // without RCON has no line here rather than a flat one at zero.
+  const ticks = samples.filter((s) => s.tps != null);
+  if (ticks.length) {
+    const low = ticks.reduce((m, s) => Math.min(m, s.tps), 20);
+    body.append(gauge({
+      title: 'TPS',
+      now: data.running ? ticks[ticks.length - 1].tps.toFixed(1) : 'stopped',
+      aside: 'low ' + low.toFixed(1) + '  ·  20 is full speed',
+      samples: ticks,
+      pick: (s) => s.tps,
+      // Fixed at the game's own ceiling: a dip from 20 to 18 should look like the small thing it is.
+      max: 20,
+      colour: 'var(--live)',
+    }));
+  }
+
   // Only when it would otherwise read as a breach. -Xmx caps the heap; this graph is the whole
   // process, which includes the JVM itself, metaspace and anything off-heap, and sitting above the
   // heap limit is ordinary rather than a problem.
@@ -4137,8 +4801,44 @@ function playerRow(p, data, base, again) {
 
 // ---------------------------------------------------------------- plugins ---
 
-/** Update results are kept until the server changes, so leaving the tab does not lose them. */
+/** Update results for the server on screen, so leaving the tool does not lose them. */
 const pluginView = { updates: null, for: null };
+
+/*
+  What the last update check found, per server, kept in the browser. The dock's badge and the
+  "updates ready" callout read it without asking Modrinth anything - only pressing Check for
+  updates goes to the network. An entry goes when its jar does: updated, deleted, or replaced
+  by hand since the check.
+*/
+const updatesKey = (name) => 'mcctl.updates.' + name;
+
+function cachedUpdates(name) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(updatesKey(name)) || 'null');
+    return saved && typeof saved === 'object' ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveUpdates(name, map) {
+  try {
+    if (map && Object.keys(map).length) localStorage.setItem(updatesKey(name), JSON.stringify(map));
+    else localStorage.removeItem(updatesKey(name));
+  } catch { /* a badge that cannot remember is a badge that waits for the next check */ }
+}
+
+/** The count on the dock's Plugins button, and the same number in its name for a screen reader. */
+function renderDockBadge() {
+  const button = $('#tabPlugins');
+  const badge = button.querySelector('.dock-badge');
+  const map = state.current && !isDb(rowOf(state.current)) ? cachedUpdates(state.current) : null;
+  const n = map ? Object.keys(map).length : 0;
+  badge.hidden = !n;
+  badge.textContent = n ? String(n) : '';
+  if (n) button.setAttribute('aria-label', toolLabel('plugins') + ', ' + n + (n === 1 ? ' update' : ' updates') + ' ready');
+  else button.removeAttribute('aria-label');
+}
 
 /**
  * What this server loads, and what Modrinth can add to it.
@@ -4154,7 +4854,7 @@ async function renderPlugins(opts) {
   const body = $('#pluginsBody');
   if (!row) { body.textContent = ''; clearPaneHead(body); return; }
   if (!force && body.dataset.for === row.name && body.childElementCount) return;
-  if (pluginView.for !== row.name) { pluginView.updates = null; pluginView.for = row.name; }
+  if (pluginView.for !== row.name) { pluginView.updates = cachedUpdates(row.name); pluginView.for = row.name; }
   body.dataset.for = row.name;
 
   let data;
@@ -4190,6 +4890,14 @@ async function renderPlugins(opts) {
 
   const base = '/instances/' + encodeURIComponent(row.name) + '/plugins';
   const again = () => renderPlugins({ force: true });
+
+  // What the last check said about a jar that is no longer there is no longer true.
+  if (pluginView.updates) {
+    const files = new Set(data.plugins.map((p) => p.file));
+    const stale = Object.keys(pluginView.updates).filter((file) => !files.has(file));
+    for (const file of stale) delete pluginView.updates[file];
+    if (stale.length) { saveUpdates(row.name, pluginView.updates); renderDockBadge(); }
+  }
 
   const how = document.createElement('div');
   how.className = 'hint';
@@ -4299,23 +5007,22 @@ async function renderPlugins(opts) {
     };
   }
 
-  // ---- add from Modrinth -----------------------------------------------------
+  // ---- add from Modrinth or Hangar ---------------------------------------------
+  // First, because finding something new is the thing this tool is opened for most; the list of
+  // what is already there is below it, where a glance down finds it.
   const add = document.createElement('div');
-  add.className = 'section';
-  const addTitle = document.createElement('h3');
-  addTitle.textContent = data.hangar ? 'Add from Modrinth and Hangar' : 'Add from Modrinth';
+  add.className = 'plug-add';
   const addRow = document.createElement('div');
   addRow.className = 'row';
   const q = document.createElement('input');
   q.type = 'search';
-  q.placeholder = mods
-    ? 'Search mods — try Lithium, FerriteCore, Fabric API'
-    : 'Search plugins — try WorldEdit, spark, EssentialsX';
-  q.style.flex = '1 1 240px';
+  q.placeholder = mods ? 'Add mods from Modrinth' : 'Add from ' + sources;
+  q.setAttribute('aria-label', q.placeholder);
+  q.style.flex = '1 1 200px';
   const go = iconButton('search', 'Search');
   addRow.append(q, go);
   const results = document.createElement('div');
-  add.append(addTitle, addRow, results);
+  add.append(addRow, results);
   body.append(add);
 
   const doSearch = async () => {
@@ -4406,22 +5113,37 @@ async function renderPlugins(opts) {
   go.onclick = doSearch;
   q.onkeydown = (e) => { if (e.key === 'Enter') doSearch(); };
 
-  // ---- what mcctl installed --------------------------------------------------
-  // Only jars mcctl put there. A custom or premium plugin somebody dropped into the folder by
-  // hand is theirs: it would never show an update, and this page claims no say over it.
-  const managed = data.plugins.filter((p) => p.managed);
-  const manualCount = data.plugins.length - managed.length;
+  // ---- updates ready -----------------------------------------------------------
+  const callout = document.createElement('div');
+  callout.className = 'callout';
+  body.append(callout);
 
+  // ---- what is installed -------------------------------------------------------
+  // Everything in the folder, not only what SpawnLoft installed: a jar dropped in by hand is
+  // listed and labelled as left alone, rather than being a number in a footnote. Only the ones
+  // SpawnLoft put there get updates, a toggle and a delete - the rest are the person's own.
+  const listHead = document.createElement('div');
+  listHead.className = 'plug-head';
   const listTitle = document.createElement('h3');
   listTitle.className = 'hist-title';
-  listTitle.textContent = 'Installed through SpawnLoft (' + managed.length + ')';
-  const head = document.createElement('div');
-  head.className = 'row where';
-  const check = iconButton('restore', 'Check for updates');
-  const checkNote = document.createElement('span');
+  listTitle.textContent = 'Installed (' + data.plugins.length + ')';
+  const check = iconButton('restore', 'Check for updates', 'ghost');
+  listHead.append(listTitle, check);
+  const checkNote = document.createElement('div');
   checkNote.className = 'hint';
-  head.append(check, checkNote);
-  body.append(listTitle, head);
+  const listWrap = document.createElement('div');
+  body.append(listHead, checkNote, listWrap);
+
+  const singular = mods ? 'mod' : 'plugin';
+  const plural = mods ? 'mods' : 'plugins';
+  const nameOf = (file) => (data.plugins.find((p) => p.file === file) || { name: file }).name;
+  const knownUpdates = () => Object.values(pluginView.updates || {});
+  const forget = (file) => {
+    if (!pluginView.updates) return;
+    delete pluginView.updates[file];
+    saveUpdates(row.name, pluginView.updates);
+    renderDockBadge();
+  };
 
   check.onclick = async () => {
     check.disabled = true;
@@ -4430,8 +5152,10 @@ async function renderPlugins(opts) {
       const out = await post(base + '/updates');
       pluginView.updates = {};
       for (const u of out.updates) pluginView.updates[u.file] = u;
+      saveUpdates(row.name, pluginView.updates);
+      renderDockBadge();
       checkNote.textContent = out.updates.length
-        ? out.updates.length + ' update' + (out.updates.length === 1 ? '' : 's') + ' available.'
+        ? ''
         : 'Everything SpawnLoft installed is already the newest build.';
       paint();
     } catch (e) {
@@ -4442,94 +5166,165 @@ async function renderPlugins(opts) {
     }
   };
 
-  const listWrap = document.createElement('div');
-  body.append(listWrap);
+  /**
+   * Every known update in one go. One snapshot of the folder first, then each in turn, then - on a
+   * running server - the restart that loads them, so "update everything" is one decision rather
+   * than one per plugin and a restart remembered afterwards.
+   */
+  const updateAll = async (known, button, progress) => {
+    const restart = data.running;
+    const what = known.length === 1 ? '1 ' + singular : known.length + ' ' + plural;
+    const ok = await ask({
+      title: (restart ? 'Update ' + what + ' and restart?' : 'Update ' + what + '?'),
+      text: 'A snapshot of the ' + data.kind + ' folder is taken first, then each is updated in turn'
+        + (restart
+          ? ', and ' + (row.label || row.name) + ' restarts to load them. Anyone online is disconnected for the restart.'
+          : '. They load the next time the server starts.'),
+      confirmLabel: restart ? 'Update and restart' : 'Update all',
+    });
+    if (!ok) return;
+    button.disabled = true;
+    check.disabled = true;
+    const jobId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'job-' + Date.now();
+    const jobs = new EventSource('/api/jobs/' + jobId + '/stream');
+    jobs.onmessage = (ev) => {
+      let job;
+      try { job = JSON.parse(ev.data); } catch { return; }
+      if (job.message) progress.textContent = job.message;
+    };
+    let out;
+    try {
+      out = await post(base + '/update-all', { files: known.map((u) => u.file), jobId: jobId });
+    } catch (e) {
+      jobs.close();
+      toast(e.message, 'bad');
+      progress.textContent = '';
+      button.disabled = false;
+      check.disabled = false;
+      return;
+    }
+    jobs.close();
+    for (const u of out.updated) forget(u.file);
+    for (const f of out.failed) toast(nameOf(f.file) + ' was not updated: ' + f.error, 'bad');
+    if (out.updated.length) {
+      toast('Updated ' + (out.updated.length === 1 ? '1 ' + singular : out.updated.length + ' ' + plural)
+        + '. A snapshot of the ' + data.kind + ' folder was taken first.', 'good');
+    }
+    if (restart && out.updated.length && state.current === row.name) {
+      progress.textContent = 'Restarting ' + (row.label || row.name) + '…';
+      await act('restart')();
+    }
+    await again();
+  };
+
+  const paintCallout = () => {
+    callout.textContent = '';
+    const known = knownUpdates();
+    callout.hidden = !known.length;
+    if (!known.length) return;
+    const text = document.createElement('div');
+    text.className = 'callout-text';
+    const b = document.createElement('b');
+    b.textContent = known.length + (known.length === 1 ? ' update ready' : ' updates ready');
+    const list = document.createElement('span');
+    list.textContent = known.map((u) => nameOf(u.file)).join(', ');
+    text.append(b, list);
+    const run = document.createElement('button');
+    run.type = 'button';
+    run.className = 'primary';
+    run.textContent = data.running ? 'Update and restart' : 'Update all';
+    const progress = document.createElement('div');
+    progress.className = 'hint callout-progress';
+    progress.setAttribute('aria-live', 'polite');
+    callout.append(text, run, progress);
+    run.onclick = () => updateAll(known, run, progress);
+  };
 
   const paint = () => {
+    paintCallout();
     listWrap.textContent = '';
-    if (!managed.length) {
-      listWrap.append(emptyState('plug', manualCount
-        ? 'Nothing installed through SpawnLoft yet. Anything installed from the search above shows '
-          + 'up here with one-click updates.'
-        : 'No ' + data.kind + ' yet. Search ' + sources + ' above and they land in this server’s '
-          + data.kind + ' folder.'));
-    } else {
-      const list = document.createElement('div');
-      list.className = 'people';
-      for (const p of managed) list.append(pluginRow(p));
-      listWrap.append(list);
+    if (!data.plugins.length) {
+      listWrap.append(emptyState('plug', 'No ' + data.kind + ' yet. Search ' + sources + ' above and they land in this server’s '
+        + data.kind + ' folder.'));
+      return;
     }
-    if (manualCount) {
-      const own = document.createElement('div');
-      own.className = 'hint';
-      own.style.marginTop = '4px';
-      own.textContent = manualCount + (manualCount === 1 ? ' jar' : ' jars')
-        + ' in the ' + data.kind + ' folder ' + (manualCount === 1 ? 'was' : 'were')
-        + ' added by hand — custom or premium ' + data.kind + ' SpawnLoft leaves alone. '
-        + (manualCount === 1 ? 'It loads' : 'They load') + ' as normal.';
-      listWrap.append(own);
-    }
+    const list = document.createElement('div');
+    list.className = 'plist';
+    for (const p of data.plugins) list.append(pluginRow(p));
+    listWrap.append(list);
   };
+
+  /** Two capitals from the name where it has them - "WE", "LP" - or its first letter. */
+  function monogram(name) {
+    const caps = String(name).match(/[A-Z]/g) || [];
+    if (caps.length >= 2) return caps[0] + caps[1];
+    const first = String(name).replace(/[^A-Za-z0-9]/g, '').slice(0, 1);
+    return first ? first.toUpperCase() : '?';
+  }
 
   function pluginRow(p) {
     const el = document.createElement('div');
-    el.className = 'who';
+    el.className = 'plug';
     if (!p.enabled) el.setAttribute('data-off', '');
-    const mark = document.createElement('div');
-    mark.className = 'face face-mark';
-    mark.append(icon('plug'));
+    // The rest of what is known about it, a pointer away rather than a second line on every row.
+    const facts = [];
+    if (p.description) facts.push(p.description);
+    facts.push(p.file + '  ·  ' + (p.size / 1024 / 1024).toFixed(1) + ' MB');
+    if (p.authors.length) facts.push('by ' + p.authors.join(', '));
+    el.title = facts.join('\n');
 
+    const tile = document.createElement('span');
+    tile.className = 'plug-tile';
+    tile.setAttribute('aria-hidden', 'true');
+    tile.textContent = monogram(p.name);
+
+    const main = document.createElement('div');
+    main.className = 'plug-main';
     const nm = document.createElement('div');
-    nm.className = 'w-name';
-    const who = document.createElement('span');
-    who.textContent = p.name;
-    nm.append(who);
-    if (p.version) {
-      const pill = document.createElement('span');
-      pill.className = 'pill';
-      pill.textContent = p.version;
-      nm.append(pill);
-    }
-    if (p.source) {
-      const pill = document.createElement('span');
-      pill.className = 'pill';
-      pill.textContent = p.source === 'hangar' ? 'Hangar' : p.source === 'modpack' ? 'Modpack' : 'Modrinth';
-      nm.append(pill);
-    }
-    if (!p.enabled) {
-      const pill = document.createElement('span');
-      pill.className = 'pill';
-      pill.textContent = 'Disabled';
-      nm.append(pill);
-    }
-    const update = pluginView.updates && pluginView.updates[p.file];
-    if (update) {
-      const pill = document.createElement('span');
-      pill.className = 'pill';
-      pill.dataset.tone = 'op';
-      pill.textContent = update.latestVersion + ' available';
-      nm.append(pill);
-    }
+    nm.className = 'plug-name';
+    nm.textContent = p.name;
+    const src = document.createElement('div');
+    src.className = 'plug-src';
+    const from = !p.managed ? 'Added by hand · left alone'
+      : p.source === 'hangar' ? 'Hangar' : p.source === 'modpack' ? 'Modpack' : 'Modrinth';
+    src.textContent = from + (p.enabled ? '' : ' · Disabled');
+    main.append(nm, src);
 
-    const meta = document.createElement('div');
-    meta.className = 'w-meta';
-    const bits = [];
-    if (p.description) bits.push(p.description);
-    bits.push(p.file + '  ·  ' + (p.size / 1024 / 1024).toFixed(1) + ' MB');
-    if (p.authors.length) bits.push('by ' + p.authors.join(', '));
-    meta.textContent = bits.join('  ·  ');
+    const ver = document.createElement('span');
+    ver.className = 'plug-ver';
+    ver.textContent = p.version || '';
 
     const acts = document.createElement('div');
-    acts.className = 'w-acts';
-    const upBtn = update ? iconButton('restore', 'Update', 'primary') : null;
-    const toggle = document.createElement('button');
-    toggle.textContent = p.enabled ? 'Disable' : 'Enable';
-    const drop = iconButton('trash', 'Delete', 'danger');
-    if (upBtn) acts.append(upBtn);
-    acts.append(toggle, drop);
-    el.append(mark, nm, meta, acts);
+    acts.className = 'plug-acts';
+    el.append(tile, main, ver, acts);
+    if (!p.managed) return el;
 
-    const busy = (on) => { for (const b of acts.children) b.disabled = on; };
+    const update = pluginView.updates && pluginView.updates[p.file];
+    const upBtn = update ? document.createElement('button') : null;
+    if (upBtn) {
+      upBtn.type = 'button';
+      upBtn.className = 'primary';
+      upBtn.textContent = '→ ' + update.latestVersion;
+      upBtn.setAttribute('aria-label', 'Update ' + p.name + ' to ' + update.latestVersion);
+      acts.append(upBtn);
+    }
+    const quiet = document.createElement('span');
+    quiet.className = 'quiet';
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'ghost';
+    toggle.textContent = p.enabled ? 'Disable' : 'Enable';
+    toggle.setAttribute('aria-label', (p.enabled ? 'Disable ' : 'Enable ') + p.name);
+    const drop = document.createElement('button');
+    drop.type = 'button';
+    drop.className = 'icon-btn';
+    drop.append(icon('trash'));
+    drop.setAttribute('aria-label', 'Delete ' + p.name);
+    drop.title = 'Delete';
+    quiet.append(toggle, drop);
+    acts.append(quiet);
+
+    const busy = (on) => { for (const b of acts.querySelectorAll('button')) b.disabled = on; };
 
     if (upBtn) {
       upBtn.onclick = async () => {
@@ -4537,7 +5332,7 @@ async function renderPlugins(opts) {
         upBtn.textContent = 'Updating…';
         try {
           const out = await post(base + '/update', { file: p.file });
-          delete pluginView.updates[p.file];
+          forget(p.file);
           toast(out.alreadyLatest
             ? p.name + ' is already the newest build.'
             : 'Updated ' + p.name + ' to ' + out.version + '. A plugins snapshot was taken first.', 'good');
@@ -4546,7 +5341,7 @@ async function renderPlugins(opts) {
         } catch (e) {
           toast(e.message, 'bad');
           busy(false);
-          upBtn.textContent = 'Update';
+          upBtn.textContent = '→ ' + update.latestVersion;
         }
       };
     }
@@ -4566,15 +5361,16 @@ async function renderPlugins(opts) {
     drop.onclick = async () => {
       const ok = await ask({
         title: 'Delete ' + p.name + '?',
-        text: p.file + ' is removed from the plugins folder. Its config folder stays, so '
+        text: p.file + ' is removed from the ' + data.kind + ' folder. Its config folder stays, so '
           + 'installing it again picks up where it left off.',
-        confirmLabel: 'Delete plugin',
+        confirmLabel: 'Delete ' + singular,
         danger: true,
       });
       if (!ok) return;
       busy(true);
       try {
         await post(base + '/delete', { file: p.file });
+        forget(p.file);
         toast('Deleted ' + p.file + '.', 'good');
         await again();
       } catch (e) {
@@ -6406,35 +7202,9 @@ async function renderServerSettings() {
   if (body.dataset.for === row.name) await renderServerDatabases(row, body);
 }
 
-$('#bFolder').onclick = () => { if (state.current) openFolder(state.current); };
-
 // --------------------------------------------------------------- manage ----
 
-$('#bManage').onclick = async () => {
-  const row = rowOf(state.current);
-  if (!row) return;
-  if (isDb(row)) return manageDatabase(row);
-  const live = row.status === 'running';
-  const res = await ask({
-    title: 'Manage ' + row.name,
-    text: live
-      ? 'This server is running. Stop it first to rename it, change its settings, reset it or delete it.'
-      : 'Choose what to do with this server.',
-    confirmLabel: 'Continue',
-    choices: live
-      ? [{ value: 'folder', label: 'Open its folder', hint: 'Shows the server directory in Explorer.' }]
-      : [
-          { value: 'edit', label: 'Rename, or change memory and port', hint: 'Takes effect the next time it starts.' },
-          { value: 'rebuild', label: 'Reset the world', hint: 'Deletes worlds and generated state. A snapshot is taken first.' },
-          { value: 'delete', label: 'Delete this server', hint: 'Removes it from SpawnLoft, and optionally its files.' },
-        ],
-  });
-  if (!res) return;
-  if (res.choice === 'folder') return openFolder(row.name);
-  if (res.choice === 'edit') return editServer(row);
-  if (res.choice === 'rebuild') return rebuildServer(row);
-  if (res.choice === 'delete') return deleteServer(row);
-};
+// What "⋯" beside Start and Stop offers is built by moreItems(); these are the actions behind it.
 
 async function openFolder(name) {
   try {
@@ -7637,21 +8407,12 @@ async function changeTheme(event) {
 showTheme(document.documentElement.dataset.theme);
 $$('input[name="appTheme"]').forEach(input => { input.onchange = changeTheme; });
 
-function shorten(p, max) {
-  if (!p || p.length <= max) return p;
-  return p.slice(0, 12) + '…' + p.slice(-(max - 13));
-}
-
 async function loadSettings() {
   try {
     state.layout = await api('/settings');
   } catch {
-    return;
+    /* Preferences says it could not read them */
   }
-  const chip = $('#rootChip');
-  chip.hidden = false;
-  chip.textContent = shorten(state.layout.dataRoot, 44);
-  chip.title = 'Data folder: ' + state.layout.dataRoot;
 }
 
 function renderSettings() {
@@ -7660,6 +8421,7 @@ function renderSettings() {
   const paths = $('#setPaths');
   paths.textContent = '';
   const rows = l ? [
+    ['Data folder', l.dataRoot],
     ['Servers', l.instancesDir + (l.separateInstances ? '   (separate drive)' : '')],
     ['Server jars', l.jarsDir],
     ['Backups', l.backupsDir],
@@ -7811,7 +8573,7 @@ async function renderMcp() {
   show();
 }
 
-$('#bSettings').onclick = () => openSheet('settings', renderSettings);
+$('#bSettings').onclick = () => { if (state.view !== 'settings') openSheet('settings', renderSettings); };
 $('#bSetClose').onclick = back;
 
 // -------------------------------------------------------------- feedback ---
@@ -8041,43 +8803,43 @@ loadSoftware().then(() => loadVersions($('#nLoader').value));
 // ------------------------------------------------------------ prerequisites -
 
 /**
- * Java, said once, at the top, until it is fixed.
+ * Java, said at the top, until it is fixed.
  *
- * <p>Everything else in this panel works without it; nothing actually runs. Putting it in a banner
- * rather than a toast is the point - a toast is for something that just happened, and this is a
- * condition.
+ * <p>Everything else in this panel works without it; nothing actually runs. It is a chip in the
+ * header rather than a toast - a toast is for something that just happened, and this is a
+ * condition - and a chip rather than the banner it used to be, because "Java 25" needs a word's
+ * width, not the window's. The whole sentence is its accessible name and its tooltip.
  */
+function renderJavaChip() {
+  const chip = $('#javaChip');
+  const health = state.health;
+  const java = health && health.java;
+  if (!java || (java.ok && java.reason === 'ok')) { chip.hidden = true; return; }
+
+  // Which servers it holds up, and the newest Java any of them needs; with none registered, the
+  // version the download link is for.
+  const have = java.found ? java.major : null;
+  const short = state.rows.filter((r) => r.javaNeeds && (have == null || have < r.javaNeeds));
+  const linked = Number((/[?&]version=(\d+)/.exec(health.javaDownload || '') || [])[1]) || null;
+  const need = short.length ? Math.max(...short.map((r) => r.javaNeeds)) : linked;
+
+  chip.hidden = false;
+  chip.dataset.tone = java.found ? 'warn' : 'fault';
+  chip.querySelector('span').textContent = 'Java' + (need ? ' ' + need : '');
+  const sentence = short.length
+    ? (short.length === 1 ? '1 server needs' : short.length + ' servers need') + ' Java ' + need + '.'
+    : java.found ? 'Java needs updating.' : 'Java is not installed.';
+  chip.setAttribute('aria-label', sentence + ' Get Java.');
+  chip.title = java.message + ' Servers will not start until it is sorted.';
+}
+
+$('#javaChip').onclick = () => { if (state.health) openOutside(state.health.javaDownload); };
+
 api('/health').then((health) => {
-  const java = health.java;
-  if (!java || (java.ok && java.reason === 'ok')) return;
-
-  const bar = document.createElement('div');
-  bar.className = 'banner' + (java.ok ? ' warn' : '');
-  const b = document.createElement('b');
-  b.textContent = java.found ? 'Java needs updating' : 'Java is not installed';
-  const text = document.createElement('span');
-  text.textContent = java.message + ' Servers will not start until it is sorted.';
-  const grow = document.createElement('span');
-  grow.className = 'grow';
-  bar.append(b, text, grow);
-
-  if (desktop) {
-    const get = document.createElement('button');
-    get.textContent = 'Get Java';
-    get.onclick = () => desktop.openExternal(health.javaDownload);
-    bar.append(get);
-  } else {
-    const link = document.createElement('a');
-    link.href = health.javaDownload;
-    link.target = '_blank';
-    link.rel = 'noreferrer';
-    link.style.color = 'inherit';
-    link.textContent = health.javaDownload;
-    bar.append(link);
-  }
-  $('#banner').append(bar);
+  state.health = health;
+  renderJavaChip();
 }).catch(() => {
-  // An unreachable health check is not worth a banner of its own; the panel is clearly running.
+  // An unreachable health check is not worth saying anything about; the panel is clearly running.
 });
 
 // ---- desktop-only: version and updates -------------------------------------
@@ -8087,7 +8849,6 @@ api('/health').then((health) => {
 if (desktop) {
   desktop.appInfo().then((info) => {
     state.appInfo = info;
-    $('#appver').textContent = 'v' + info.version + (info.packaged ? '' : ' (' + info.coreMode + ')');
     $('#bUpdate').hidden = false;
     if (info.manualUpdates) {
       $('#bUpdate').textContent = 'Download Mac preview';
@@ -8210,11 +8971,18 @@ document.addEventListener('keydown', (e) => {
     dlg.dispatchEvent(new Event('cancel', { cancelable: true }));
     return;
   }
-  if (state.view === 'add' || state.view === 'settings' || state.view === 'feedback') back();
+  if (state.view === 'add' || state.view === 'settings' || state.view === 'feedback') { back(); return; }
+  // A tool lying over the console, or filling its space, closes from inside itself the way a
+  // sheet does - but only from inside it, so Escape in the command box never closes a panel.
+  if (state.view === 'server' && toolView.tool && $('#toolPanel').contains(document.activeElement)) {
+    e.preventDefault();
+    closeTool();
+  }
 });
 
 show('empty');
 loadSettings();
+loadJavas();
 refresh().then(() => {
   renderEmptyFor(state.rows);
   // One server and nothing selected is not a choice worth making anyone click through.

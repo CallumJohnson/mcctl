@@ -7,7 +7,8 @@ const { spawn } = require('node:child_process')
 /** Native Oracle binaries, created through the packaged GUI from an empty engine store. */
 module.exports = async function smokeMySQL({ page, api, cli, core, executable, env, data, name, output, record }) {
   const dbName = `${name}-db`
-  await page.locator('#tabSettings').click()
+  // A second press on an open tool closes it, so press only if Settings is not already open.
+  if (await page.locator('#tabSettings').getAttribute('aria-expanded') !== 'true') await page.locator('#tabSettings').click()
   const create = page.locator('#settingsBody').getByRole('button', { name: 'Create a database', exact: true })
   await create.scrollIntoViewIfNeeded()
   assert.equal(await create.isEnabled(), true)
