@@ -7,7 +7,8 @@ const { spawn } = require('node:child_process')
 /** Native Oracle binaries, created through the packaged GUI from an empty engine store. */
 module.exports = async function smokeMySQL({ page, api, cli, core, executable, env, data, name, output, record }) {
   const dbName = `${name}-db`
-  await page.locator('#tabSettings').click()
+  // A second press on an open tool closes it, so press only if Settings is not already open.
+  if (await page.locator('#tabSettings').getAttribute('aria-expanded') !== 'true') await page.locator('#tabSettings').click()
   const create = page.locator('#settingsBody').getByRole('button', { name: 'Create a database', exact: true })
   await create.scrollIntoViewIfNeeded()
   assert.equal(await create.isEnabled(), true)
@@ -54,16 +55,16 @@ const user = { ...db, root: { user: record.user, password: record.password } };
 assert.equal(maria.findTools(), mysql.engineDir(db.version), 'external tools discovery finds the managed engine');
 const table = String.fromCharCode(96) + record.database + String.fromCharCode(96) + '.spawnloft_smoke';
 if (phase === 'write') {
-  mysql.sql(user, 'CREATE TABLE ' + table + ' (id INT PRIMARY KEY, value VARCHAR(32)); INSERT INTO ' + table + " VALUES (1, 'persisted');");
-  assert.throws(() => mysql.sql(user, 'SELECT User FROM mysql.user'), /denied/i);
-  assert.throws(() => mysql.sql({ ...user, root: { ...user.root, password: 'wrong-password' } }, 'SELECT 1'), /denied/i);
+  await mysql.sql(user, 'CREATE TABLE ' + table + ' (id INT PRIMARY KEY, value VARCHAR(32)); INSERT INTO ' + table + " VALUES (1, 'persisted');");
+  await assert.rejects(mysql.sql(user, 'SELECT User FROM mysql.user'), /denied/i);
+  await assert.rejects(mysql.sql({ ...user, root: { ...user.root, password: 'wrong-password' } }, 'SELECT 1'), /denied/i);
 } else {
-  assert.equal(mysql.sql(user, 'SELECT value FROM ' + table).trim(), 'persisted');
+  assert.equal((await mysql.sql(user, 'SELECT value FROM ' + table)).trim(), 'persisted');
   const dump = path.join(output, 'mysql-roundtrip.sql');
   await mysql.dump(db, record.database, dump);
-  mysql.sql(user, 'DELETE FROM ' + table);
+  await mysql.sql(user, 'DELETE FROM ' + table);
   await mysql.importSql(db, dump);
-  assert.equal(mysql.sql(user, 'SELECT value FROM ' + table).trim(), 'persisted');
+  assert.equal((await mysql.sql(user, 'SELECT value FROM ' + table)).trim(), 'persisted');
 }
 console.log('PASS: MySQL ' + phase + ' and scoped credentials');
 `)

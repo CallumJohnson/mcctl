@@ -22,82 +22,102 @@
     --surface:  #141823;
     --raised:   #1c2130;
     --sunken:   #0a0c12;
-    /* Between void and surface. Four components had this as a copied hex - the vitals strip, the
-       sections in Backups, the charts and the task form - which is exactly the set a surface
-       hierarchy has to be able to talk about. */
+    /* Between void and surface: wells inside a card - the vitals strip, a chart, a form. */
     --recess:   #11151f;
-    /* The border colour a danger control already uses, named so it stops being pasted. */
+    /* The header, the server tabs and the tool dock: the frame around the work, one step below
+       the page so the work sits forward of it. */
+    --chrome:   #0f121a;
+    /* The border colour a danger control uses, named so it stops being pasted. */
     --fault-edge: #4a2529;
-    --line:     #252b3b;
-    --edge:     #354056;
+    /* Three weights of rule. --line borders a card or a control; --line-soft divides the regions
+       of a screen; --line-faint separates rows inside a list or a form, where a full-strength
+       rule on every row turns the list into a grid. All solid: the planes they sit on are solid
+       too, so there is nothing for a translucent line to adapt to. */
+    --line:       #252b3b;
+    --line-soft:  #1f2433;
+    --line-faint: #191d29;
+    --edge:       #354056;
 
     --ink:      #e9ecf4;
     --ink-2:    #9aa4ba;
-    --ink-3:    #6b7488;
+    /* Lifted from #6d7589, which measured under 4.5:1 on --surface and is used for 12px text. */
+    --ink-3:    #8089a0;
+    /* Below the reading line on purpose: console timestamps, which are looked up, not read. */
+    --ink-4:    #545d72;
 
     --lapis:     #5b84ff;
     --lapis-dim: #2c3f8f;
-    --lapis-wash: rgba(91, 132, 255, .12);
+    --lapis-wash: rgba(91, 132, 255, .14);
 
     --live:  #4ade80;
     --warn:  #f0b64d;
     --fault: #f2645c;
-    --idle:  #6b7488;
+    --idle:  #8089a0;
 
     --ui: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
-    --mono: ui-monospace, "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+    /* Headings and big numbers: the display cut of the same family, drawn for sizes above 20px. */
+    --display: "Segoe UI Variable Display", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", Menlo, monospace;
 
-    --r: 10px;
-    --r-sm: 6px;
+    /* Corner radii. Classic keeps the rounder set; SpawnLoft redeclares these four and nothing
+       else that is not a colour, to match the sharper corners of the website it takes its
+       colours from. */
+    --r: 12px;
+    --r-sm: 8px;
+    --r-xs: 6px;
+    --r-lg: 16px;
 
-    /* The bright top edge of a panel gradient - the same light --lift catches, as a colour. */
+    /* The lit top edge of a surface, as a colour - what --lift catches, for a gradient stop. */
     --surface-hi: #171c2b;
 
-    /* Elevation on a dark ground, without shadows. A soft shadow over #0c0e14 reads as dirt; a
-       one-pixel light edge along the top of a card reads as a surface catching the light, which is
-       what the eye is actually looking for. */
+    /* A one-pixel light edge along the top of a surface reads as it catching the light. */
     --lift: inset 0 1px 0 rgba(255, 255, 255, .045);
     --lift-strong: inset 0 1px 0 rgba(255, 255, 255, .07);
 
-    /* Green at the strength a background can take, for the faint wash behind a player who is
-       connected. The amber and red equivalents went out with the spine system that used them. */
+    /* Green at the strength a background can take, behind a player who is connected. */
     --live-wash:  rgba(74, 222, 128, .09);
 
-    /* The width of a lit edge. One thing uses it - a scheduled task Windows has never heard of. */
+    /* The width of a lit edge: a scheduled task Windows has never heard of, a console level. */
     --spine: 3px;
 
-    /* Type scale. Seven sizes, and every font-size in the panel is one of them. There used to be
-       seventeen, from 10px to 30px in half-pixel steps, and the panes that felt a half-step off
-       from each other were the ones that had picked 12.5px where their neighbour had 13px. */
+    /* Type scale. Seven sizes, and every font-size in the panel is one of them. */
     --t-1: 11px;   /* labels, badges, and the smallest monospace facts */
     --t-2: 12px;   /* hints, metadata, secondary lines */
     --t-3: 13px;   /* controls, body text inside panes, the console */
     --t-4: 14px;   /* the page's base size */
     --t-5: 16px;   /* pane and dialog titles */
-    --t-6: 20px;   /* a server's name, a big number */
-    --t-7: 30px;   /* the one display heading */
+    --t-6: 22px;   /* a server's name, a big number */
+    --t-7: 32px;   /* the one display heading */
 
-    /* Spacing, on a four-pixel grid. Padding inside a control keeps its own tuned values; these
-       are for the layout between things - pane padding, card padding, the gaps in a grid. */
+    /* Spacing, on a four-pixel grid. */
     --s-1: 4px;
     --s-2: 8px;
     --s-3: 12px;
     --s-4: 16px;
     --s-5: 20px;
-    --s-6: 24px;
-    --s-7: 32px;
+    --s-6: 28px;
+    --s-7: 40px;
 
-    /* The two radii the 10px and 6px did not cover: a tag or pill, and a dialog. */
-    --r-xs: 4px;
-    --r-lg: 12px;
+    /* Depth. Every plane is solid: the frame is --chrome, a sheet or dialog is --raised, and the
+       one-pixel --lift along the top says which is in front. Glass needs something behind it to
+       be glass, and behind the panel there is only a console and a form, so the blur bought
+       nothing and made small text on it softer. The names stay so a layer can still say what
+       it is. */
+    --glass:        var(--chrome);
+    --glass-strong: var(--raised);
+    --blur: none;
+    --shadow-sm: inset 0 1px 0 rgba(255, 255, 255, .045), 0 1px 2px rgba(0, 0, 0, .35);
+    --shadow-md: inset 0 1px 0 rgba(255, 255, 255, .05), 0 1px 2px rgba(0, 0, 0, .35), 0 12px 32px -18px rgba(0, 0, 0, .7);
+    --shadow-lg: inset 0 1px 0 rgba(255, 255, 255, .07), 0 2px 6px rgba(0, 0, 0, .4), 0 28px 64px -20px rgba(0, 0, 0, .75);
+    /* Every hover in the panel moves at this speed. */
+    --ease: 200ms ease-in-out;
 
-    /* Tones: ink, edge and fill for each of the state colours, so a good/bad/op pill, a danger
-       button, a notice and a banner all draw from one place instead of each pasting hex. A wash
-       is the translucent form for text sitting on the page; a fill is the solid form for a
-       control that needs an opaque body. */
+    /* Tones: ink, edge and fill for each state colour, so a pill, a danger button, a notice and a
+       banner draw from one place. A wash is translucent, for text on the page; a fill is solid,
+       for a control that needs an opaque body. */
     --live-ink:   #9ff0c4;
-    --live-edge:  #22503a;
-    --live-fill:  #14261d;
+    --live-edge:  rgba(74, 222, 128, .3);
+    --live-fill:  rgba(74, 222, 128, .12);
     --warn-ink:   #f4cd86;
     --warn-edge:  rgba(240, 182, 77, .32);
     --warn-wash:  rgba(240, 182, 77, .11);
@@ -105,36 +125,36 @@
     --fault-fill: #2b1719;
     --fault-wash: rgba(242, 100, 92, .11);
     --lapis-ink:  #cdd9ff;
-    --lapis-edge: #33407a;
-    --lapis-fill: #171d33;
+    /* Also the border of a field whose value has been changed and not yet saved. */
+    --lapis-edge: #3d55b8;
+    --lapis-fill: rgba(91, 132, 255, .12);
 
-    /* The lit top of a raised control, and the shade it goes to under the pointer. */
     --raised-hi: #212737;
-    --hover:     #222839;
-    /* Theme-sensitive details previously embedded in component rules. Classic keeps its exact
-       palette; the second theme only replaces these values, never the meaning of a status. */
+    --hover:     rgba(233, 236, 244, .05);
     --accent-rgb: 91, 132, 255;
     --ink-rgb: 233, 236, 244;
     --scroll-thumb: #2a3145;
     --scroll-hover: #3a4560;
-    --hover-hi: #262d40;
+    --hover-hi: rgba(233, 236, 244, .08);
+    /* The primary button is one flat colour. Top and bottom stay separate names so a theme can
+       bring a gradient back without touching a component. */
     --primary-top: #4360d4;
-    --primary-bottom: #3247a4;
-    --primary-edge: #4c66d6;
+    --primary-bottom: #4360d4;
+    --primary-edge: #4360d4;
     --primary-ink: #eef2ff;
     --primary-hover-top: #4d6ae6;
-    --primary-hover-bottom: #3a51b8;
-    --setup-primary-fill: #2c3f8f;
-    --setup-primary-edge: #3d55b8;
-    --setup-primary-ink: #eaf0ff;
-    --setup-primary-hover: #35499f;
+    --primary-hover-bottom: #4d6ae6;
+    --setup-primary-fill: #4360d4;
+    --setup-primary-edge: #4360d4;
+    --setup-primary-ink: #eef2ff;
+    --setup-primary-hover: #4d6ae6;
     --field-focus: #0d1119;
-    --segment-top: #242b3e;
-    --segment-bottom: #1d2333;
+    --segment-top: #1c2130;
+    --segment-bottom: #1c2130;
     --door-hover: #212739;
-    --switch-top: #3a50bd;
-    --choice-top: #4a63d9;
-    --control-mark: #eaf0ff;
+    --switch-top: #4360d4;
+    --choice-top: #4360d4;
+    --control-mark: #eef2ff;
     --console-ink: #cfd6e4;
     --dialog-backdrop: rgba(6, 8, 12, .6);
     --cube-top: #5f85ef;
@@ -152,43 +172,43 @@
     --raised: #1e271d;
     --sunken: #080c09;
     --recess: #101610;
+    --chrome: #0c110d;
     --line: #30382e;
+    --line-soft: #252c24;
+    --line-faint: #1d241c;
     --edge: #485541;
     --ink: #efeee6;
     --ink-2: #b5bcac;
     --ink-3: #909a86;
+    --ink-4: #5f6a58;
     --idle: #909a86;
     --lapis: #c4f566;
     --lapis-dim: #546e2a;
     --lapis-wash: rgba(196, 245, 102, .12);
     --lapis-ink: #dbf4b2;
-    --lapis-edge: #516337;
-    --lapis-fill: #202b17;
+    --lapis-edge: #7a9a45;
+    --lapis-fill: rgba(196, 245, 102, .1);
     --surface-hi: #19211a;
     --raised-hi: #263021;
-    --hover: #2b3625;
-    --r: 6px;
-    --r-sm: 4px;
-    --r-xs: 3px;
-    --r-lg: 8px;
+    --hover: rgba(239, 238, 230, .05);
     --accent-rgb: 196, 245, 102;
     --ink-rgb: 239, 238, 230;
     --scroll-thumb: #394431;
     --scroll-hover: #536348;
-    --hover-hi: #303c29;
+    --hover-hi: rgba(239, 238, 230, .08);
     --primary-top: #c4f566;
-    --primary-bottom: #b5e35b;
+    --primary-bottom: #c4f566;
     --primary-edge: #c4f566;
     --primary-ink: #14200b;
     --primary-hover-top: #d3ff80;
-    --primary-hover-bottom: #c4f566;
+    --primary-hover-bottom: #d3ff80;
     --setup-primary-fill: #c4f566;
     --setup-primary-edge: #c4f566;
     --setup-primary-ink: #14200b;
     --setup-primary-hover: #d3ff80;
     --field-focus: #11180f;
-    --segment-top: #303c29;
-    --segment-bottom: #263020;
+    --segment-top: #1e271d;
+    --segment-bottom: #1e271d;
     --door-hover: #293424;
     --switch-top: #c4f566;
     --choice-top: #c4f566;
@@ -200,6 +220,10 @@
     --cube-right: #567c24;
     --cube-cutout: #efffdc;
     --chart-cpu: #c4f566;
+    --r: 10px;
+    --r-sm: 6px;
+    --r-xs: 4px;
+    --r-lg: 12px;
   }
 
   * { box-sizing: border-box; }
@@ -208,44 +232,49 @@
   html, body { height: 100%; }
   body {
     margin: 0;
+    /* Plain, like the panel: the accent is kept for things that can be clicked. */
     background: var(--void);
     color: var(--ink);
-    font: 14px/1.55 var(--ui);
+    font: var(--t-4)/1.55 var(--ui);
+    -webkit-font-smoothing: antialiased;
     display: grid;
     place-items: center;
     padding: 28px;
     overflow: auto;
   }
-  :focus-visible { outline: 2px solid var(--lapis); outline-offset: 2px; border-radius: 3px; }
+  :focus-visible { outline: 2px solid var(--lapis); outline-offset: 2px; border-radius: 4px; }
 
   .card {
     width: min(660px, 100%);
-    background: var(--surface);
+    background: var(--glass);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
     border: 1px solid var(--line);
     border-radius: var(--r-lg);
-    padding: 30px 32px 26px;
+    box-shadow: var(--shadow-lg);
+    padding: 32px 36px 28px;
   }
 
-  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
   .brand svg { display: block; }
   .brand polygon:nth-child(1) { fill: var(--cube-top); }
   .brand polygon:nth-child(2) { fill: var(--cube-left); }
   .brand polygon:nth-child(3) { fill: var(--cube-right); }
   .brand polygon:nth-child(4) { fill: var(--cube-cutout); }
-  .brand b { font: 600 15px/1 var(--mono); letter-spacing: -.02em; }
-  .brand .step { margin-left: auto; font: 11px/1 var(--mono); color: var(--ink-3); letter-spacing: .04em; }
+  .brand b { font: 650 var(--t-4)/1 var(--display); letter-spacing: -.015em; }
+  .brand .step { margin-left: auto; font: 500 var(--t-1)/1 var(--mono); color: var(--ink-3); padding: 5px 9px; border: 1px solid var(--line); border-radius: 999px; background: rgba(var(--ink-rgb), .025); }
 
-  h1 { font: 600 23px/1.25 var(--ui); margin: 0 0 8px; letter-spacing: -.015em; }
-  p.sub { color: var(--ink-2); margin: 0 0 26px; font-size: 14px; }
+  h1 { font: 650 var(--t-6)/1.2 var(--display); margin: 0 0 10px; letter-spacing: -.025em; }
+  p.sub { color: var(--ink-2); margin: 0 0 28px; font-size: var(--t-4); line-height: 1.6; }
   p.sub b { color: var(--ink); font-weight: 600; }
 
   .fieldlabel {
     display: block;
-    margin-bottom: 6px;
-    font: 600 11px/1 var(--ui);
+    margin-bottom: 7px;
+    font: 650 var(--t-1)/1 var(--ui);
     text-transform: uppercase;
     letter-spacing: .08em;
-    color: var(--ink-2);
+    color: var(--ink-3);
   }
   .pathrow { display: flex; gap: 8px; margin-bottom: 8px; }
   input[type="text"] {
@@ -254,86 +283,91 @@
     color: var(--ink);
     border: 1px solid var(--line);
     border-radius: var(--r-sm);
-    padding: 9px 11px;
-    font: 12.5px/1.4 var(--mono);
+    padding: 9px 12px;
+    font: var(--t-2)/1.4 var(--mono);
     width: 100%;
+    /* Carved into the surface the way the panel's fields are. */
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35);
+    transition: all var(--ease);
   }
-  /* Carved into the surface the way the panel's fields are - --lift's opposite: sunken
-     things cast a shadow along their top edge instead of catching the light there. */
-  input[type="text"] { box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, .34); transition: border-color .12s, box-shadow .12s; }
   input[type="text"]:hover { border-color: var(--edge); }
   input[type="text"]:focus {
     outline: none;
-    border-color: var(--lapis);
-    box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, .28), 0 0 0 3px var(--lapis-wash);
+    border-color: var(--lapis-edge);
+    background-color: var(--field-focus);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .3), 0 0 0 3px var(--lapis-wash);
   }
 
   button {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    background: var(--raised);
+    background: rgba(var(--ink-rgb), .035);
     color: var(--ink);
-    border: 1px solid var(--line);
+    border: 1px solid var(--edge);
     border-radius: var(--r-sm);
     padding: 8px 14px;
-    font: 13px/1.4 var(--ui);
+    font: 500 var(--t-3)/1.4 var(--ui);
     cursor: pointer;
     white-space: nowrap;
+    box-shadow: var(--lift);
+    transition: all var(--ease);
   }
-  button:hover:not(:disabled) { border-color: var(--edge); background: var(--hover); }
-  button:active:not(:disabled) { transform: translateY(1px); }
+  button:where(:hover:not(:disabled)) { border-color: rgba(var(--ink-rgb), .2); background: var(--hover-hi); transform: translateY(-1px); }
+  button:where(:active:not(:disabled)) { transform: translateY(0); }
   button:disabled { opacity: .38; cursor: default; }
-  button.primary { background: var(--setup-primary-fill); border-color: var(--setup-primary-edge); color: var(--setup-primary-ink); font-weight: 600; padding: 10px 22px; }
-  button.primary:hover:not(:disabled) { background: var(--setup-primary-hover); border-color: var(--lapis); }
-  button.small { padding: 5px 11px; font-size: 12.5px; }
+  button.primary { background: linear-gradient(180deg, var(--primary-top), var(--primary-bottom)); border-color: var(--setup-primary-edge); color: var(--setup-primary-ink); font-weight: 600; padding: 10px 24px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 6px 18px -8px rgba(var(--accent-rgb), .75); }
+  button.primary:hover:not(:disabled) { background: linear-gradient(180deg, var(--primary-hover-top), var(--primary-hover-bottom)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .26), 0 10px 24px -8px rgba(var(--accent-rgb), .85); }
+  button.small { padding: 5px 12px; font-size: var(--t-2); }
 
-  .hint { font-size: 12.5px; color: var(--ink-3); line-height: 1.5; }
+  .hint { font-size: var(--t-2); color: var(--ink-3); line-height: 1.5; }
 
   .toggle {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 4px 11px;
-    padding: 13px 14px;
+    gap: 4px 12px;
+    padding: 14px 16px;
     border: 1px solid var(--line);
     border-radius: var(--r-sm);
-    background: var(--raised);
-    margin: 20px 0;
+    background: var(--surface);
+    margin: 22px 0;
     cursor: pointer;
+    transition: all var(--ease);
   }
-  .toggle:has(input:checked) { border-color: var(--lapis-dim); background: var(--lapis-wash); }
+  .toggle:hover { border-color: var(--edge); background: var(--raised); }
+  .toggle:has(input:checked) { border-color: var(--lapis-edge); background: var(--lapis-wash); }
   /* Explicit rows and columns throughout. The checkbox sits on the title line rather than centred
      against the whole block - a control beside the explanation reads as if it belongs to the
      explanation - and pinning the text to column 2 stops auto-placement dropping it into the
      checkbox's column and collapsing the layout. */
   .toggle input { grid-row: 1; grid-column: 1; align-self: center; accent-color: var(--lapis); margin: 0; }
-  .toggle b { grid-row: 1; grid-column: 2; font-size: 13.5px; }
-  .toggle .why { grid-row: 2; grid-column: 2; color: var(--ink-3); font-size: 12.5px; }
+  .toggle b { grid-row: 1; grid-column: 2; font-size: var(--t-3); font-weight: 600; }
+  .toggle .why { grid-row: 2; grid-column: 2; color: var(--ink-3); font-size: var(--t-2); line-height: 1.5; }
 
   /* Prerequisite readout, using the same lamp language the panel uses for a server. */
   .check {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    gap: 4px 11px;
-    padding: 12px 14px;
+    gap: 4px 12px;
+    padding: 14px 16px;
     border: 1px solid var(--line);
     border-radius: var(--r-sm);
-    background: var(--raised);
-    margin-bottom: 20px;
+    background: var(--surface);
+    margin-bottom: 22px;
   }
   /* Explicit columns: the button is hidden when Java is fine, and auto-placement would otherwise
      slide the explanation into the empty third column and strand it against the right edge. */
   .check .lamp { grid-row: 1; grid-column: 1; align-self: center; }
-  .check b { grid-row: 1; grid-column: 2; font-size: 13.5px; }
-  .check .why { grid-row: 2; grid-column: 2; color: var(--ink-3); font-size: 12.5px; }
+  .check b { grid-row: 1; grid-column: 2; font-size: var(--t-3); font-weight: 600; }
+  .check .why { grid-row: 2; grid-column: 2; color: var(--ink-3); font-size: var(--t-2); line-height: 1.5; }
   .check button { grid-row: 1 / 3; grid-column: 3; }
 
   .lamp {
     --lamp: var(--idle);
     position: relative;
-    width: 9px;
-    height: 9px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--lamp);
     flex: none;
@@ -341,34 +375,34 @@
   .lamp::after {
     content: "";
     position: absolute;
-    inset: -5px;
+    inset: -4px;
     border-radius: 50%;
-    background: radial-gradient(circle, var(--lamp) 0%, transparent 68%);
+    background: radial-gradient(circle, var(--lamp) 0%, transparent 70%);
     opacity: .38;
   }
   [data-state="ok"]   .lamp { --lamp: var(--live); }
   [data-state="warn"] .lamp { --lamp: var(--warn); }
   [data-state="bad"]  .lamp { --lamp: var(--fault); }
   [data-state="ok"] .lamp::after { animation: breathe 2.6s ease-in-out infinite; }
-  @keyframes breathe { 0%, 100% { opacity: .22; } 50% { opacity: .7; } }
+  @keyframes breathe { 0%, 100% { opacity: .2; } 50% { opacity: .75; } }
 
   .err {
-    color: #f7a49f;
-    background: rgba(242, 100, 92, .1);
-    border: 1px solid rgba(242, 100, 92, .3);
+    color: var(--fault-ink);
+    background: var(--fault-wash);
+    border: 1px solid var(--fault-edge);
     border-radius: var(--r-sm);
-    padding: 10px 12px;
-    font-size: 13px;
+    padding: 10px 14px;
+    font-size: var(--t-3);
     white-space: pre-wrap;
     margin-bottom: 16px;
   }
 
-  footer { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 4px; }
+  footer { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 6px; }
 
   :root[data-theme="spawnloft"] ::selection { background: var(--lapis); color: var(--void); }
   :root[data-theme="spawnloft"] ::-webkit-scrollbar { width: 10px; height: 10px; }
   :root[data-theme="spawnloft"] ::-webkit-scrollbar-track { background: transparent; }
-  :root[data-theme="spawnloft"] ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border: 3px solid transparent; background-clip: padding-box; border-radius: var(--r-sm); }
+  :root[data-theme="spawnloft"] ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
   :root[data-theme="spawnloft"] ::-webkit-scrollbar-thumb:hover { background-color: var(--scroll-hover); }
   :root[data-theme="spawnloft"] ::-webkit-scrollbar-corner { background: transparent; }
 

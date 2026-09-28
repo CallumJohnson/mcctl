@@ -56,7 +56,7 @@ const CORES = Math.max(1, os.cpus()?.length || 1)
  * the server: a graph is worth less than the thing it graphs, so this reports and gives up rather
  * than taking the daemon down with it.
  */
-export function startSampler(name, pid, { onError = () => {} } = {}) {
+export function startSampler(name, pid, { onError = () => {}, extra = () => null } = {}) {
   if (!['win32', 'darwin', 'linux'].includes(process.platform)) {
     onError(new Error('performance sampling is only implemented on Windows, macOS and Linux'))
     return () => {}
@@ -67,7 +67,7 @@ export function startSampler(name, pid, { onError = () => {} } = {}) {
 
   let written = 0
   const record = sampleRecorder((sample) => {
-    fs.appendFileSync(file, `${sample.at} ${sample.cpu.toFixed(1)} ${sample.rss}\n`)
+    fs.appendFileSync(file, sampleLine(sample, extra()))
     if (++written % 60 === 0) trim(file)
   })
   if (process.platform === 'darwin') {
@@ -150,6 +150,19 @@ export function sampleRecorder(write, cores = CORES) {
   }
 }
 
+/**
+ * One line of the file: time, CPU and memory, then what the server said about itself if it said
+ * anything - ticks per second, players online, the player limit - with "-" for a figure it did not
+ * give. The three new columns are only ever appended, so a reader that knows the first three reads
+ * a new file exactly as it read an old one.
+ */
+export function sampleLine(sample, server) {
+  const base = `${sample.at} ${sample.cpu.toFixed(1)} ${sample.rss}`
+  if (!server) return base + '\n'
+  const col = (v) => (Number.isFinite(v) ? String(v) : '-')
+  return `${base} ${col(server.tps)} ${col(server.online)} ${col(server.max)}\n`
+}
+
 function trim(file) {
   try {
     const lines = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean)
@@ -179,13 +192,58 @@ export function readSamples(name, { strict = false } = {}) {
   const rows = []
   for (const line of text.split('\n')) {
     if (!line) continue
-    const [ts, cpu, rss] = line.split(' ')
+    const [ts, cpu, rss, tps, online, max] = line.split(' ')
     const at = Number(ts)
     const row = { at, cpu: Number(cpu), rss: Number(rss) }
     if (!Object.values(row).every(Number.isFinite) || row.at <= 0 || row.cpu < 0 || row.cpu > 100 || row.rss < 0) continue
+    // Only present when the server answered, so a sample without them is the same object it always
+    // was. "-" is how an unanswered figure is written, and it stays out.
+    if (figure(tps) !== null) row.tps = figure(tps)
+    if (figure(online) !== null) row.players = figure(online)
+    if (figure(max) !== null) row.maxPlayers = figure(max)
     rows.push(row)
   }
   return rows
+}
+
+function figure(text) {
+  if (text === undefined || text === '' || text === '-') return null
+  const n = Number(text)
+  return Number.isFinite(n) && n >= 0 ? n : null
+}
+
+/**
+ * The newest sample, read from the end of the file without reading the rest of it.
+ *
+ * <p>For the server list, which the panel asks for every four seconds for every server: reading
+ * five hours of history to learn one line would be most of the work of that request. Asynchronous,
+ * because it runs on the panel's request path. Anything older than three intervals is not current
+ * and is not returned - a server that stopped an hour ago is not still using 2 GB.
+ */
+export async function latestSample(name, { now = Date.now() } = {}) {
+  let handle
+  try {
+    handle = await fs.promises.open(metricsFile(name), 'r')
+    const { size } = await handle.stat()
+    const length = Math.min(size, 512)
+    if (!length) return null
+    const buf = Buffer.alloc(length)
+    await handle.read(buf, 0, length, size - length)
+    const lines = buf.toString('utf8').split('\n').filter(Boolean)
+    const [ts, cpu, rss, tps, online, max] = (lines.at(-1) ?? '').split(' ')
+    const at = Number(ts)
+    if (!Number.isFinite(at) || now / 1000 - at > INTERVAL_SEC * 3) return null
+    const row = { at, cpu: Number(cpu), rss: Number(rss) }
+    if (!Number.isFinite(row.cpu) || !Number.isFinite(row.rss)) return null
+    if (figure(tps) !== null) row.tps = figure(tps)
+    if (figure(online) !== null) row.players = figure(online)
+    if (figure(max) !== null) row.maxPlayers = figure(max)
+    return row
+  } catch {
+    return null
+  } finally {
+    await handle?.close().catch(() => {})
+  }
 }
 
 export const SAMPLE_SECONDS = INTERVAL_SEC

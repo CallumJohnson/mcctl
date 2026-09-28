@@ -31,6 +31,7 @@ import * as mrpack from './mrpack.mjs'
 import * as neoforge from './neoforge.mjs'
 import * as worlds from './worlds.mjs'
 import * as mclogs from './mclogs.mjs'
+import * as configFiles from './config-files.mjs'
 import { diagnose, crashReports } from './diagnose.mjs'
 import { rconExposure } from './exposure.mjs'
 import { acceptableWebhook } from './notify.mjs'
@@ -404,6 +405,77 @@ function coerceProp(spec, raw) {
  * made while it is running takes effect on the next start, and the response says so rather than
  * leaving someone to wonder why nothing happened.
  */
+/**
+ * A database's own backups, for its Backups tool.
+ *
+ * <p>The download is the file itself, streamed, named as it is on disk: a dump is plain SQL, and
+ * the point of downloading one is to keep it somewhere SpawnLoft is not. Everything else answers
+ * with the list as it now stands, so the tool redraws from one answer.
+ */
+async function handleDatabaseBackups(req, res, name, seg, url) {
+  const verb = seg[4] ?? null
+  const answer = async (extra = {}) => json(res, 200, {
+    ...services.databaseBackupStatus(name),
+    backups: await services.listDatabaseBackups(name),
+    ...extra,
+  })
+
+  if (req.method === 'GET' && verb === 'download') {
+    const file = services.databaseBackupFile(name, String(url.searchParams.get('file') ?? ''))
+    const { size } = await fs.promises.stat(file)
+    res.writeHead(200, {
+      'content-type': 'application/sql; charset=utf-8',
+      'content-length': size,
+      'content-disposition': `attachment; filename="${path.basename(file)}"`,
+      'cache-control': 'no-store',
+    })
+    fs.createReadStream(file).pipe(res)
+    return
+  }
+  if (req.method === 'GET' && !verb) return answer()
+  if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' })
+
+  const body = await readBody(req)
+  if (!verb) return answer({ taken: await services.backupDatabase(name, { label: body.label ?? 'manual' }) })
+  if (verb === 'restore') return answer(await services.restoreDatabaseBackup(name, String(body.file ?? '')))
+  if (verb === 'delete') return answer(await services.deleteDatabaseBackup(name, String(body.file ?? '')))
+  return json(res, 404, { error: 'not found' })
+}
+
+/**
+ * The whole of server.properties, as text, for the settings screen's raw editor.
+ *
+ * <p>The same path the assistant's write_config_file takes, so the two cannot differ on what is
+ * safe: the file is shown with its RCON password hidden, a save puts every hidden value back from
+ * the file on disk, refuses a change to the ports and RCON settings SpawnLoft writes at every start,
+ * and snapshots the file on its own first, so the Backups tool can put back just this one file.
+ */
+async function handleRawProps(req, res, name) {
+  const inst = registry.getInstance(name)
+  if (req.method === 'GET') {
+    const out = configFiles.readConfigFile(inst, 'server.properties')
+    return json(res, 200, { text: out.text, redacted: out.redacted })
+  }
+  if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' })
+  const body = await readBody(req)
+  if (typeof body.text !== 'string') return json(res, 400, { error: 'text is required' })
+  const { full, shown } = configFiles.resolveConfigPath(inst, 'server.properties')
+  const before = await fs.promises.readFile(full, 'utf8')
+  const plan = configFiles.planConfigWrite(inst, shown, {
+    content: configFiles.restoreHidden(before, body.text),
+    hiddenRestored: true,
+  })
+  const snap = await backup.createSnapshot(inst, { scope: 'config', label: 'before-edit', members: [plan.shown], flush: false })
+  // The snapshot took a moment; the server writing its own properties meanwhile must not be lost.
+  if (!configFiles.unchangedSince(plan)) fail('server.properties changed while it was being snapshotted; reload it and try again')
+  configFiles.applyConfigWrite(plan)
+  return json(res, 200, {
+    snapshot: path.basename(snap.file),
+    appliesOnRestart: supervisor.isRunning(name),
+    diff: configFiles.summarizeChange(plan.before, plan.after),
+  })
+}
+
 async function handleProps(req, res, name) {
   const inst = registry.getInstance(name)
   const file = path.join(inst.dir, 'server.properties')
@@ -613,9 +685,9 @@ function handleMetrics(req, res, name, url) {
 }
 
 /**
- * The server software itself: what Paper offers, and moving to it.
+ * The server software itself: what its project offers, and moving to it.
  *
- * <p>GET asks PaperMC what exists - on demand only, so the panel stays off the network until
+ * <p>GET asks PaperMC, Purpur or InfernalSuite what exists - on demand only, so the panel stays off the network until
  * the person clicks. POST with no version is a routine build update; POST naming a version
  * crosses Minecraft versions, which the page has already made someone confirm, and
  * applyUpgrade takes a standard snapshot before anything is swapped.
@@ -761,6 +833,22 @@ async function handlePlugins(req, res, name, seg, url) {
   }
   if (verb === 'update') {
     return json(res, 200, await pluginActions.updateWithSnapshot(inst, body.file))
+  }
+  // Every known update at once, behind one snapshot, reporting each step on the job stream.
+  // The restart that follows is the page's to ask for, through the route every restart uses.
+  if (verb === 'update-all') {
+    const files = Array.isArray(body.files) ? body.files.map(String).filter(Boolean) : []
+    if (!files.length) return json(res, 400, { error: 'files is required' })
+    const jobId = body.jobId ? String(body.jobId) : null
+    const out = await pluginActions.updateAllWithSnapshot(inst, files, {
+      onProgress: ({ file, index, total }) => jobUpdate(jobId, {
+        stage: 'update',
+        percent: Math.round((index / total) * 100),
+        message: `Updating ${file} (${index + 1} of ${total})`,
+      }),
+    })
+    jobUpdate(jobId, { stage: 'done', percent: 100, message: `Updated ${out.updated.length} of ${files.length}`, done: true })
+    return json(res, 200, out)
   }
   return json(res, 404, { error: 'not found' })
 }
@@ -1288,15 +1376,17 @@ async function route(req, res) {
       const inst = services.getDatabase(db)
       return json(res, 200, { host: inst.host ?? '127.0.0.1', port: inst.port, user: inst.root?.user ?? 'root', password: inst.root?.password ?? '' })
     }
+    // Its own backups: SQL dumps, listed, taken, put back, deleted and downloaded.
+    if (seg[3] === 'backups') return handleDatabaseBackups(req, res, db, seg, url)
     if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' })
     const body = await readBody(req)
     if (seg[3] === 'attach') {
       if (!body.server) return json(res, 400, { error: 'server is required' })
-      return json(res, 200, services.attach(db, String(body.server)))
+      return json(res, 200, await services.attach(db, String(body.server)))
     }
     if (seg[3] === 'detach') {
       if (!body.server) return json(res, 400, { error: 'server is required' })
-      return json(res, 200, services.detach(db, String(body.server), { drop: body.drop === true }))
+      return json(res, 200, await services.detach(db, String(body.server), { drop: body.drop === true }))
     }
     if (seg[3] === 'delete') {
       return json(res, 200, services.removeDatabase(db, { purge: body.purge === true }))
@@ -1318,7 +1408,36 @@ async function route(req, res) {
       // a credential that is not sent cannot be read out of a browser cache or a screenshot.
       return safeInstance(row)
     })
+    // The newest reading of each running server - players, TPS, memory - for its tab and its
+    // header. Read from the end of each file, together, so the list costs one small read per
+    // running server rather than a history each.
+    await Promise.all(rows.map(async (row) => {
+      row.latest = row.status === 'running' ? await metrics.latestSample(row.name) : null
+    }))
     return json(res, 200, rows)
+  }
+
+  // ---- the overview: what every server needs, in one answer -------------------
+  // The per-server facts the Overview screen needs and the server list does not carry: when each
+  // was last backed up and whether it backs itself up. The schedule is read from SpawnLoft's own
+  // task file, not asked of the operating system's scheduler - that starts a process per ask, and
+  // this is asked for every server at once. Plus the machine's memory, for "14 of 32 GB reserved".
+  if (seg[1] === 'overview' && seg.length === 2 && req.method === 'GET') {
+    const tasks = Object.values(schedule.load().tasks)
+    const servers = {}
+    await Promise.all(registry.listInstances().map(async (i) => {
+      const mine = tasks.filter((t) => t.instance === i.name && t.action?.type === 'backup')
+      const auto = mine.find((t) => t.owner === schedule.OWNER_BACKUPS) ?? mine.find((t) => !t.owner && t.name === 'Automatic backup') ?? null
+      servers[i.name] = {
+        lastBackupAt: await backup.newestSnapshotAt(i.name),
+        autoBackup: auto ? { enabled: auto.enabled !== false, schedule: auto.schedule, keep: auto.action.keep ?? null } : null,
+      }
+    }))
+    return json(res, 200, {
+      machine: { memoryMb: Math.round(os.totalmem() / 1048576) },
+      automaticAvailable: platformCapabilities().scheduler,
+      servers,
+    })
   }
 
   // ---- adopt a server that already exists ----------------------------------
@@ -1466,6 +1585,7 @@ async function route(req, res) {
   }
 
   // Reads and writes, so it sits above the gate that allows only POST past this point.
+  if (seg[3] === 'props' && seg[4] === 'raw') return handleRawProps(req, res, name)
   if (seg[3] === 'props') return handleProps(req, res, name)
   if (seg[3] === 'backups') return handleBackups(req, res, name, seg)
   if (seg[3] === 'schedules') return handleSchedules(req, res, name, seg)

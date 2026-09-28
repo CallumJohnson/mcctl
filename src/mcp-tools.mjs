@@ -2,6 +2,7 @@ import path from 'node:path'
 import { getInstance, isDatabase, loadRegistry } from './registry.mjs'
 import * as sup from './supervisor.mjs'
 import { rconExec, stripColors } from './rcon.mjs'
+import { readTick } from './tick.mjs'
 import * as backup from './backup.mjs'
 import * as plugins from './plugins.mjs'
 import * as pluginActions from './plugin-actions.mjs'
@@ -15,6 +16,7 @@ import { readState } from './control.mjs'
 import { fail, humanBytes, humanDuration } from './util.mjs'
 import { DATA_ROOT } from './paths.mjs'
 import { describeServersElsewhere, serversElsewhere } from './settings.mjs'
+import * as configFiles from './config-files.mjs'
 
 /**
  * What an AI client may do to this machine's servers, and exactly that much.
@@ -39,6 +41,7 @@ const LEVEL_RE = {
 // Commands that would take the server down behind the supervisor's back - it would read the exit
 // as a crash - or run Bukkit's reload, which leaves plugins half-initialised. Each has a tool.
 const REFUSED_COMMANDS = new Set(['stop', 'restart', 'reload', 'rl'])
+const UNRECOGNISED_JAR = 'is not a jar SpawnLoft can update: it updates the Paper, Purpur, Folia and Advanced Slime Paper jars it downloaded itself'
 
 const name = { type: 'string', minLength: 1, description: 'Server name, as list_servers shows it' }
 const confirm = { type: 'boolean', description: 'Leave unset first to see what would happen; true to do it' }
@@ -171,18 +174,12 @@ const readTools = [
       const avg = (a) => (a.length ? Math.round((a.reduce((x, y) => x + y, 0) / a.length) * 10) / 10 : null)
       const summary = { samples: m.samples.length, cpuAvg: avg(cpu), cpuMax: cpu.length ? Math.max(...cpu) : null,
         cpuLast: cpu.at(-1) ?? null, memoryMiBLast: rss.at(-1) ?? null, memoryMiBMax: rss.length ? Math.max(...rss) : null }
-      const tick = {}
+      let tick = {}
       if (!isDatabase(inst) && sup.isRunning(n)) {
         // Paper answers tps and mspt; vanilla and Fabric answer tick query. Whatever the server does
-        // not know comes back as an unknown-command line and is left out.
-        for (const cmd of ['tps', 'mspt', 'tick query']) {
-          try {
-            const [reply] = await rconExec(inst, [cmd])
-            const text = stripColors(reply ?? '').trim()
-            if (text && !/unknown|incorrect argument|<--\[HERE\]/i.test(text)) tick[cmd] = text
-          } catch { /* RCON unavailable: the machine-side numbers still stand */ }
-          if (cmd === 'mspt' && tick.tps) break
-        }
+        // not know comes back as an unknown-command line and is left out. The same reader the
+        // daemon uses for the panel, so the two cannot disagree about what a reply means.
+        tick = (await readTick(async (cmd) => (await rconExec(inst, [cmd]))[0])).replies
       }
       const data = { name: n, running: m.running, windowSeconds: seconds, cores: m.cores, cpuScale: m.cpuScale,
         samplingAvailable: m.samplingAvailable, summary, tick, recent: m.samples.slice(-30) }
@@ -263,17 +260,41 @@ const readTools = [
     },
   },
   {
-    name: 'check_server_update', title: 'Check for a Paper update', annotations: READ_NET,
-    description: 'Whether a newer Paper build exists for the server\'s Minecraft version (upgrade_build applies it), and which newer Minecraft versions exist.',
+    name: 'check_server_update', title: 'Check for a server update', annotations: READ_NET,
+    description: 'Whether a newer build of the server\'s own software (Paper, Purpur, Folia or Advanced Slime Paper) exists for its Minecraft version (upgrade_build applies it), and which newer Minecraft versions that software supports.',
     inputSchema: object({ name }, ['name']),
     async run({ name: n }) {
       const info = await upgrade.checkUpgrade(server(n))
       const text = !info.current
-        ? `${n} does not run a Paper jar SpawnLoft recognises. Newest Paper is for ${info.latestVersion}.`
-        : [`${n} runs Paper ${info.current.version} build ${info.current.build}.`,
+        ? `${n} runs ${server(n).jar}, which ${UNRECOGNISED_JAR}.`
+        : [`${n} runs ${info.label} ${info.current.version} build ${info.current.build}.`,
           info.buildUpdate ? `Build ${info.latestBuild.build} is available (upgrade_build applies it).` : 'That is the newest build for its version.',
           info.newerVersions.length ? `Newer Minecraft versions: ${info.newerVersions.join(', ')} (crossing one migrates the worlds for good).` : ''].filter(Boolean).join('\n')
       return { data: { name: n, ...info }, text }
+    },
+  },
+  {
+    name: 'list_config_files', title: 'List config files', annotations: READ,
+    description: 'The text configuration files of a server (plugin configs, server.properties, paper-global.yml...), as paths for read_config_file. Worlds, logs and downloads are left out. Give a folder such as "plugins/EcoItems" to look in one place.',
+    inputSchema: object({ name, folder: { type: 'string', description: 'A folder inside the server, e.g. "plugins/EcoItems" (default: the whole server)' } }, ['name']),
+    run({ name: n, folder = '' }) {
+      const { files, truncated } = configFiles.listConfigFiles(server(n), folder)
+      const text = files.length
+        ? files.map((f) => `${f.path} (${humanBytes(f.sizeBytes)})`).join('\n') + (truncated ? '\n(more files exist; give a folder to narrow it down)' : '')
+        : `No configuration files in ${folder || n}.`
+      return { data: { name: n, folder: folder || null, files, truncated }, text }
+    },
+  },
+  {
+    name: 'read_config_file', title: 'Read a config file', annotations: READ,
+    description: 'The text of one configuration file, by its path inside the server folder (from list_config_files). Passwords, tokens and webhook URLs are shown as [redacted].',
+    inputSchema: object({ name, path: { type: 'string', minLength: 1, description: 'Path inside the server folder, e.g. "plugins/EcoItems/config.yml"' } }, ['name', 'path']),
+    run({ name: n, path: p }) {
+      const file = configFiles.readConfigFile(server(n), p)
+      // The file goes in the structured data as well as the reply: a client that has structured data
+      // shows the model that instead of the text (Claude Code does), so leaving it out there
+      // returned a file with no contents.
+      return { data: { name: n, ...file }, text: file.text || '(the file is empty)' }
     },
   },
   {
@@ -415,12 +436,45 @@ const actionTools = [
     },
   },
   {
-    name: 'upgrade_build', title: 'Update Paper', annotations: WRITE_NET,
-    description: 'Move a server to the newest Paper build of the Minecraft version it already runs. The old jar is kept beside it. Takes effect at the next start. Crossing Minecraft versions is upgrade_minecraft.',
+    name: 'write_config_file', title: 'Change a config file', annotations: WRITE,
+    description: 'Change one configuration file inside a server folder. Prefer old_text and new_text: one exact replacement, which must match once (copy it from read_config_file, indentation included). content replaces the whole file, or creates a new one. The file is snapshotted first, so the change can be undone. Takes effect when the plugin reloads its config (often a "<plugin> reload" command through run_command) or at the next restart.',
+    inputSchema: object({
+      name,
+      path: { type: 'string', minLength: 1, description: 'Path inside the server folder, e.g. "plugins/EcoItems/config.yml"' },
+      old_text: { type: 'string', description: 'Exact text to replace; must appear once in the file' },
+      new_text: { type: 'string', description: 'What to put in its place' },
+      content: { type: 'string', description: 'The whole new file, instead of old_text/new_text' },
+    }, ['name', 'path']),
+    async run({ name: n, path: p, old_text: oldText, new_text: newText, content }, { progress }) {
+      const inst = server(n)
+      const plan = configFiles.planConfigWrite(inst, p, { content, oldText, newText })
+      let snapshot = null
+      if (plan.existed) {
+        progress(`Snapshotting ${plan.shown}`)
+        const res = await backup.createSnapshot(inst, { scope: 'config', label: 'before-edit', members: [plan.shown], flush: false })
+        snapshot = path.basename(res.file)
+        // The snapshot took a moment; a plugin saving its config meanwhile must not be written over.
+        if (!configFiles.unchangedSince(plan)) fail(`${plan.shown} changed while it was being snapshotted; read it again`)
+      }
+      configFiles.applyConfigWrite(plan)
+      const running = sup.isRunning(n)
+      const diff = configFiles.summarizeChange(plan.before, plan.after)
+      const text = [
+        plan.existed ? `Changed ${plan.shown} on ${n}.` : `Created ${plan.shown} on ${n}.`,
+        diff,
+        snapshot ? `Snapshot taken first: ${snapshot} (restore puts back this one file).` : 'It is a new file, so there was nothing to snapshot.',
+        running ? 'The server is running: the change applies when the plugin reloads its config or at the next restart. Some plugins write their config back when they stop, so check it after a restart.' : 'Takes effect at the next start.',
+      ].join('\n')
+      return { data: { name: n, path: plan.shown, created: !plan.existed, snapshot, running, diff }, text }
+    },
+  },
+  {
+    name: 'upgrade_build', title: 'Update the server software', annotations: WRITE_NET,
+    description: 'Move a server to the newest build of its own software (Paper, Purpur, Folia or Advanced Slime Paper) for the Minecraft version it already runs. The old jar is kept beside it. Takes effect at the next start. Crossing Minecraft versions is upgrade_minecraft.',
     inputSchema: object({ name }, ['name']),
     async run({ name: n }, { progress }) {
       const inst = server(n)
-      if (!upgrade.parsePaperJar(inst.jar)) fail(`${inst.jar} is not a Paper jar SpawnLoft recognises`)
+      if (!upgrade.parseServerJar(inst.jar)) fail(`${inst.jar} ${UNRECOGNISED_JAR}`)
       progress('Downloading the newest build')
       const running = sup.isRunning(n)
       const res = await upgrade.applyUpgrade(n, { running })
@@ -491,14 +545,14 @@ const destructiveTools = [
     inputSchema: object({ name, version: { type: 'string', minLength: 1, description: 'Target Minecraft version, from check_server_update' }, confirm }, ['name', 'version']),
     async run({ name: n, version, confirm: yes = false }, { progress }) {
       const inst = server(n)
-      const current = upgrade.parsePaperJar(inst.jar)
-      if (!current) fail(`${inst.jar} is not a Paper jar SpawnLoft recognises`)
+      const current = upgrade.parseServerJar(inst.jar)
+      if (!current) fail(`${inst.jar} ${UNRECOGNISED_JAR}`)
       if (version === current.version) fail(`${n} already runs ${version}; use upgrade_build for a newer build of it`)
       if (!yes) {
         return { data: { name: n, confirmed: false, from: current.version, to: version },
           text: `Would move ${n} from Minecraft ${current.version} to ${version}. Worlds migrate one way on the next start; a snapshot is taken first. Check that its plugins support ${version}. Nothing has changed yet; call again with confirm: true to do it.` }
       }
-      progress(`Downloading Paper ${version}`)
+      progress(`Downloading ${current.label} ${version}`)
       const running = sup.isRunning(n)
       const res = await upgrade.applyUpgrade(n, { version, running })
       const snapshot = res.snapshot ? path.basename(res.snapshot) : null
@@ -514,7 +568,8 @@ export function toolsFor({ allowDestructive = false } = {}) {
 }
 
 export const INSTRUCTIONS = `SpawnLoft runs Minecraft servers on this computer. Start with list_servers to learn the server names.
-Changes to plugins and Paper take effect when the server next restarts. install_plugin and update_plugin take a plugins snapshot first; take a backup yourself before anything else risky.
+Changes to plugins and the server software take effect when the server next restarts. install_plugin and update_plugin take a plugins snapshot first; take a backup yourself before anything else risky.
+To change a plugin's settings, find the file with list_config_files, read it with read_config_file, and change it with write_config_file using old_text and new_text; each change is snapshotted first. Then reload the plugin with run_command, or restart.
 When a server will not start, read diagnostics before get_logs. For get_logs, prefer level "warn" over reading everything.
 Destructive tools (restore, kill, upgrade_minecraft), when present, describe what they would do unless called with confirm: true; show that description to the user before confirming.`
 

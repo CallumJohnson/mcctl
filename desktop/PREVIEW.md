@@ -6,10 +6,38 @@ Linux x64 packages all pass their native checks. Each release is immutable and n
 
 ### Fixes to try
 
-- **AI assistants (new in 1.3):** `spawnloft mcp` lets an MCP app such as Claude Desktop or
-  Claude Code run your servers. Settings -> AI assistants shows the config for this install.
-  Tried: start, TPS, backup, plugin install, Paper update and restart on Windows. Please try it
-  from a Mac and Linux, and with a local model, and say what your assistant got wrong.
+- **A redesigned panel (new in 1.4):** solid surfaces in place of the frosted glass, new
+  colours in both themes, a dense backups table, compact Performance widgets and hover states
+  throughout. Classic's faintest text is brighter, and SpawnLoft has its sharper corners back.
+  Only the look changed. Please say where anything reads worse than before, especially small
+  grey text and the smallest window size.
+- **The console stays on screen (new in 1.4):** servers are tabs across the top, and a server's
+  tools - Plugins, Worlds, Backups, Players, Stats, Schedule, Settings - open from a dock on the
+  right, beside the console instead of in place of it. Settings and Backups open full width with
+  the console's newest line along the bottom; the button at the top of any tool swaps between
+  the two. Under each server's name are its players, TPS, memory and last backup, and Plugins can
+  update everything it found in one go and restart. Please say which tool you wanted open beside
+  the console and could not, and how it all fits at the smallest window size.
+- **An overview of every server (new in 1.4):** the grid tab at the left of the server tabs.
+  Each server's state, players, TPS, memory and last backup on one screen, with Start or Stop on
+  its card, and a "Needs attention" row for a crash, plugin updates a check found, a server with
+  no backups, or a missing Java - each with the one button that deals with it. Please say what
+  it flagged that you did not care about, and what it missed that you did.
+- **Server settings as one form (new in 1.4):** a server's Settings list their sections down the
+  side, with a dot on any holding an unsaved change. Each setting says Default until the file has
+  it and Changed until it is saved, and the bar at the bottom saves, discards, or saves and
+  restarts. Memory is set here now, beside Java, and server.properties can be edited whole, with
+  the RCON password kept hidden and the file snapshotted first. Please try an edit in the whole
+  file, and say which setting you looked for in the form and did not find.
+- **Database backups of their own (new in 1.4):** a MySQL database now has a Backups tool.
+  Back up now writes a SQL dump of the databases your servers use in it; each dump in the list
+  can be downloaded, put back or deleted, and putting one back saves how things were first.
+  Please download one and open it somewhere else, and try a restore on a test database.
+- **AI assistants change config files (new in 1.4):** ask your assistant to change a plugin
+  setting. It lists, reads and edits the server's text config through `list_config_files`,
+  `read_config_file` and `write_config_file`, snapshotting each file before it changes it.
+  Passwords in those files show as `[redacted]` and cannot be written. Please try a real edit
+  and a reload, then put it back from the Backups tab, and say what your assistant got wrong.
 - **MySQL and Redis on both platforms:** new setups offer MySQL 8.4 LTS (the default)
   and Redis (Garnet) on Windows x64, Apple Silicon, and Intel Mac. MariaDB is removed
   from new setup choices. Garnet automatically downloads its verified private runtime;
