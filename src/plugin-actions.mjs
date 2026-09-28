@@ -48,3 +48,27 @@ export async function updateWithSnapshot(inst, file) {
   const snap = await snapshotPlugins(inst, 'pre-update')
   return { ...(await plugins.updatePlugin(inst, String(file), { gameVersion })), snapshot: snap?.file ?? null }
 }
+
+/**
+ * Several updates behind one snapshot. The way back is the plugins folder as it was before any of
+ * them, which is the state someone rolling back wants - and one snapshot of a folder that can run
+ * to hundreds of megabytes, not one per plugin.
+ *
+ * <p>One at a time, in order. A failure is recorded and the rest carry on: one author pulling a
+ * build must not leave every other plugin on its old version.
+ */
+export async function updateAllWithSnapshot(inst, files, { onProgress = () => {} } = {}) {
+  const gameVersion = plugins.mcVersionOf(inst)
+  const snap = await snapshotPlugins(inst, 'pre-update')
+  const updated = []
+  const failed = []
+  for (const [index, file] of files.entries()) {
+    onProgress({ file, index, total: files.length })
+    try {
+      updated.push({ file, ...(await plugins.updatePlugin(inst, String(file), { gameVersion })) })
+    } catch (err) {
+      failed.push({ file, error: err?.message ?? String(err) })
+    }
+  }
+  return { updated, failed, snapshot: snap?.file ?? null }
+}

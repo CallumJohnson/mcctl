@@ -65,6 +65,19 @@ async function main() {
   const name = 'desktop-smoke'
   const consoleFile = path.join(data, 'run', name, 'console.log')
 
+  // A server's tools open beside its console from the dock, and each server remembers which one
+  // was open, so pressing a tool's button is only "open" while it is closed - a second press
+  // closes it. These say what the step wants rather than which button to press.
+  async function openTool(id) {
+    const button = page.locator(`#${id}`)
+    if (await button.getAttribute('aria-expanded') !== 'true') await button.click()
+    await page.locator('#toolPanel').waitFor({ state: 'visible' })
+  }
+  async function showConsole() {
+    if (await page.locator('#toolPanel').isVisible()) await page.locator('#toolClose').click()
+    await page.locator('#log').waitFor({ state: 'visible' })
+  }
+
   function record(message) {
     console.log(message)
     log.push(message)
@@ -376,7 +389,7 @@ setInterval(() => { const end = performance.now() + 50; while (performance.now()
     record(`PASS: packaged daemon starts, reaches ready, and receives console input over its ${isUnix ? 'Unix socket' : 'named pipe'}`)
     await page.locator('#bSetClose').click()
     await page.locator(`#list [data-name="${name}"]`).click()
-    await page.locator('#tabSettings').click()
+    await openTool('tabSettings')
     const showCredentials = page.locator('#settingsBody').getByRole('button', { name: 'Show credentials', exact: true })
     await showCredentials.waitFor({ state: 'visible' })
     assert.match(await page.locator('#settingsBody').textContent(), /configure your plugins manually/)
@@ -389,7 +402,7 @@ setInterval(() => { const end = performance.now() + 50; while (performance.now()
     await page.locator('#dlgCancel').click()
     assert.equal(fs.readFileSync(pluginConfig, 'utf8'), manualConfig)
     record('PASS: database settings offer manual credentials without plugin config writers; legacy CLI apply is rejected and existing config bytes stay unchanged')
-    await page.locator('#tabConsole').click()
+    await showConsole()
     const warningLine = page.locator('#log .ln').filter({ hasText: 'desktop smoke warning' })
     await warningLine.waitFor({ state: 'visible' })
     assert.equal(await warningLine.locator('.txt').textContent(), '[00:00:01 WARN]: ' + warningText)
@@ -411,7 +424,7 @@ setInterval(() => { const end = performance.now() + 50; while (performance.now()
     await page.locator('[data-lvl="all"]').click()
     record('PASS: ANSI output becomes searchable plain text with warning levels; long lines scroll and Wrap remains available')
 
-    await page.locator('#tabPerformance').click()
+    await openTool('tabPerformance')
     await page.waitForFunction(() => {
       const values = [...document.querySelectorAll('#performanceBody .gauge .now')].map(el => el.textContent)
       return values.length === 2 && /\d.*%/.test(values[0]) && /\d.* MB/.test(values[1])
@@ -428,8 +441,8 @@ setInterval(() => { const end = performance.now() + 50; while (performance.now()
     await page.screenshot({ path: path.join(output, '06-performance-live.png') })
     await page.locator('#performanceBody .ranges').getByRole('button', { name: '1m', exact: true }).click()
     await page.waitForFunction(() => document.querySelector('#performanceBody .ranges button[aria-pressed="true"]')?.textContent === '1m')
-    await page.locator('#tabConsole').click()
-    await page.locator('#tabPerformance').click()
+    await showConsole()
+    await openTool('tabPerformance')
     assert.equal(await page.locator('#performanceBody .ranges button[aria-pressed="true"]').textContent(), '1m')
     const beforeClose = await api(`instances/${name}/metrics`)
     fs.writeFileSync(path.join(output, 'performance-live.json'), JSON.stringify(beforeClose, null, 2))
@@ -465,7 +478,7 @@ setInterval(() => { const end = performance.now() + 50; while (performance.now()
     record('PASS: theme survives app restart; detached server survives and then stops cleanly')
 
     await page.locator(`#list [data-name="${name}"]`).click()
-    await page.locator('#tabPerformance').click()
+    await openTool('tabPerformance')
     await page.waitForFunction(() => [...document.querySelectorAll('#performanceBody .gauge .now')]
       .every(el => el.textContent === 'stopped') && document.querySelectorAll('#performanceBody .gauge .now').length === 2)
     const stoppedMetrics = await api(`instances/${name}/metrics`)
@@ -485,7 +498,7 @@ setInterval(() => { const end = performance.now() + 50; while (performance.now()
     record('PASS: measurements continue with the app closed, remain visible after stop, and restart with a fresh process baseline')
 
     await page.locator(`#list [data-name="${name}"]`).click()
-    await page.locator('#tabBackups').click()
+    await openTool('tabBackups')
     const scope = page.locator('#backupsBody .section').filter({ has: page.getByRole('heading', { name: 'Back up now', exact: true }) }).locator('select')
     await scope.selectOption('full')
     const scopeElement = await scope.elementHandle()
@@ -495,9 +508,9 @@ setInterval(() => { const end = performance.now() + 50; while (performance.now()
     assert.equal(await scope.inputValue(), 'full', 'Automatic history refresh must preserve the selected backup scope')
     assert.ok(await scopeElement.evaluate((element) => element.isConnected), 'Polling must not rebuild the backup form')
     assert.equal(await page.evaluate(() => window.__backupSmoke), pageMarker, 'CLI-created backup must appear without a page reload')
-    await page.locator('#tabConsole').click()
+    await showConsole()
     await cli(['backup', name, '--label', 'cli-reentry-smoke'])
-    await page.locator('#tabBackups').click()
+    await openTool('tabBackups')
     await page.locator('#backupsBody .snap .what').filter({ hasText: 'cli-reentry-smoke' }).waitFor({ state: 'visible', timeout: 12000 })
     assert.equal(await scope.inputValue(), 'full', 'Reopening Backups must preserve the selected scope')
     assert.equal(await page.evaluate(() => window.__backupSmoke), pageMarker)
@@ -507,7 +520,7 @@ setInterval(() => { const end = performance.now() + 50; while (performance.now()
     // Oracle publishes no small MySQL build for Linux on arm64. There the one-click button must be
     // off and say why, rather than be offered and refused; Redis below still runs.
     if (isLinux && process.arch !== 'x64') {
-      await page.locator('#tabSettings').click()
+      await openTool('tabSettings')
       const create = page.locator('#settingsBody').getByRole('button', { name: 'Create a database', exact: true })
       await create.scrollIntoViewIfNeeded()
       assert.equal(await create.isEnabled(), false, 'Managed MySQL must not be offered where it cannot be installed')
