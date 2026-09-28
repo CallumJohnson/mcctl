@@ -357,6 +357,10 @@ export function statusOf(name) {
     exitCode: state?.exitCode ?? null,
     // True once the last run ended in a crash nobody asked for; the next start clears it.
     crashed: Boolean(state?.crashed),
+    // How many times crash guard has brought it back since it was started. Each comeback is a
+    // fresh launch, so startedAt is when the latest one happened.
+    restarts: state?.restarts ?? 0,
+    stoppedAt: state?.stoppedAt ?? null,
     lastError: state?.error ?? null,
     uptimeMs: status === 'running' && state?.startedAt ? Date.now() - state.startedAt : null,
     stateFile: stateFile(name),
