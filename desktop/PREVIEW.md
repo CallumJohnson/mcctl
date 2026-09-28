@@ -29,6 +29,10 @@ Linux x64 packages all pass their native checks. Each release is immutable and n
   restarts. Memory is set here now, beside Java, and server.properties can be edited whole, with
   the RCON password kept hidden and the file snapshotted first. Please try an edit in the whole
   file, and say which setting you looked for in the form and did not find.
+- **Database backups of their own (new in 1.4):** a MySQL database now has a Backups tool.
+  Back up now writes a SQL dump of the databases your servers use in it; each dump in the list
+  can be downloaded, put back or deleted, and putting one back saves how things were first.
+  Please download one and open it somewhere else, and try a restore on a test database.
 - **AI assistants change config files (new in 1.4):** ask your assistant to change a plugin
   setting. It lists, reads and edits the server's text config through `list_config_files`,
   `read_config_file` and `write_config_file`, snapshotting each file before it changes it.
