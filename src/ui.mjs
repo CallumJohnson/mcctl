@@ -406,6 +406,43 @@ function coerceProp(spec, raw) {
  * leaving someone to wonder why nothing happened.
  */
 /**
+ * A database's own backups, for its Backups tool.
+ *
+ * <p>The download is the file itself, streamed, named as it is on disk: a dump is plain SQL, and
+ * the point of downloading one is to keep it somewhere SpawnLoft is not. Everything else answers
+ * with the list as it now stands, so the tool redraws from one answer.
+ */
+async function handleDatabaseBackups(req, res, name, seg, url) {
+  const verb = seg[4] ?? null
+  const answer = async (extra = {}) => json(res, 200, {
+    ...services.databaseBackupStatus(name),
+    backups: await services.listDatabaseBackups(name),
+    ...extra,
+  })
+
+  if (req.method === 'GET' && verb === 'download') {
+    const file = services.databaseBackupFile(name, String(url.searchParams.get('file') ?? ''))
+    const { size } = await fs.promises.stat(file)
+    res.writeHead(200, {
+      'content-type': 'application/sql; charset=utf-8',
+      'content-length': size,
+      'content-disposition': `attachment; filename="${path.basename(file)}"`,
+      'cache-control': 'no-store',
+    })
+    fs.createReadStream(file).pipe(res)
+    return
+  }
+  if (req.method === 'GET' && !verb) return answer()
+  if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' })
+
+  const body = await readBody(req)
+  if (!verb) return answer({ taken: await services.backupDatabase(name, { label: body.label ?? 'manual' }) })
+  if (verb === 'restore') return answer(await services.restoreDatabaseBackup(name, String(body.file ?? '')))
+  if (verb === 'delete') return answer(await services.deleteDatabaseBackup(name, String(body.file ?? '')))
+  return json(res, 404, { error: 'not found' })
+}
+
+/**
  * The whole of server.properties, as text, for the settings screen's raw editor.
  *
  * <p>The same path the assistant's write_config_file takes, so the two cannot differ on what is
@@ -1339,6 +1376,8 @@ async function route(req, res) {
       const inst = services.getDatabase(db)
       return json(res, 200, { host: inst.host ?? '127.0.0.1', port: inst.port, user: inst.root?.user ?? 'root', password: inst.root?.password ?? '' })
     }
+    // Its own backups: SQL dumps, listed, taken, put back, deleted and downloaded.
+    if (seg[3] === 'backups') return handleDatabaseBackups(req, res, db, seg, url)
     if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' })
     const body = await readBody(req)
     if (seg[3] === 'attach') {

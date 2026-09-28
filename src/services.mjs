@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { SERVICES_DIR } from './paths.mjs'
+import { SERVICES_DIR, BACKUPS_DIR } from './paths.mjs'
 import {
   getInstance, putInstance, updateInstance, removeInstance, hasInstance, listServices, isDatabase, freeName,
   usedPorts, assertPortUsable,
@@ -10,7 +10,7 @@ import * as mariadb from './mariadb.mjs'
 import * as garnet from './garnet.mjs'
 import * as mysql from './mysql.mjs'
 import { readState, clearState } from './control.mjs'
-import { fail, findFreePort, isPortFree, randomPassword, validateName, cleanLabel } from './util.mjs'
+import { fail, findFreePort, isPortFree, randomPassword, validateName, cleanLabel, stamp, humanBytes } from './util.mjs'
 import * as supervisor from './supervisor.mjs'
 
 /**
@@ -385,6 +385,148 @@ export async function dumpAttachments(serverName, dir) {
     }
   }
   return { dumped, skipped }
+}
+
+// ---- a database's own backups ---------------------------------------------------------------
+
+/*
+  A database backed up on its own, the way a forum's admin panel does it: a SQL dump, kept in a list,
+  that can be downloaded, put back or deleted. A server's snapshot already carries a dump of the
+  databases it is attached to - but only while the database runs, and only as part of that one
+  server - and a database that several servers share, or that holds a network's permissions,
+  deserves a history of its own.
+
+  Kept beside the servers' snapshots, under the database's name (names are unique across servers
+  and databases alike), one .sql file per backup with a small manifest beside it. Plain SQL, so a
+  download opens in any client and imports into any MySQL.
+*/
+
+export function databaseBackupsDir(name) {
+  return path.join(BACKUPS_DIR, name)
+}
+
+/** A file name this module wrote, and nothing that could reach outside the folder. */
+const DUMP_NAME = /^[\w.-]+\.sql$/
+
+function dumpPath(name, file) {
+  const base = path.basename(String(file ?? ''))
+  if (base !== file || !DUMP_NAME.test(base)) fail(`"${file}" is not a backup of "${name}"`)
+  const full = path.join(databaseBackupsDir(name), base)
+  if (!fs.existsSync(full)) fail(`there is no backup called "${base}" for "${name}"`)
+  return full
+}
+
+/** The databases in this engine that SpawnLoft knows about: one per attached server. */
+function attachedDatabases(db) {
+  return [...new Set(Object.values(db.attachments ?? {}).map((a) => a.database))]
+}
+
+/** Every backup of one database, newest first. Asynchronous: the panel lists this on a poll. */
+export async function listDatabaseBackups(name) {
+  getDatabase(name)
+  const dir = databaseBackupsDir(name)
+  let files
+  try {
+    files = (await fs.promises.readdir(dir)).filter((f) => DUMP_NAME.test(f))
+  } catch {
+    return []
+  }
+  const rows = await Promise.all(files.map(async (f) => {
+    const full = path.join(dir, f)
+    const st = await fs.promises.stat(full)
+    const manifest = await fs.promises.readFile(`${full.slice(0, -4)}.json`, 'utf8').then(JSON.parse, () => ({}))
+    return {
+      name: f,
+      size: st.size,
+      sizeHuman: humanBytes(st.size),
+      mtime: st.mtime,
+      label: manifest.label ?? '',
+      databases: manifest.databases ?? [],
+    }
+  }))
+  return rows.sort((a, b) => b.mtime - a.mtime)
+}
+
+/** What the Backups tool needs to say before anything is pressed. */
+export function databaseBackupStatus(name) {
+  const db = getDatabase(name)
+  return {
+    canDump: Boolean(engineOf(db).canDump),
+    running: isUp(db),
+    databases: attachedDatabases(db),
+    dir: databaseBackupsDir(name),
+  }
+}
+
+/**
+ * Dump every database a server uses in this engine into one .sql file.
+ *
+ * <p>Each is dumped with the engine's own tool, consistently and without locking the tables, then
+ * joined in order: each part names its own database, so the whole file imports in one go. Written
+ * beside its final name and renamed into place, so a listing never offers half a dump.
+ */
+export async function backupDatabase(name, { label = 'manual' } = {}) {
+  const db = getDatabase(name)
+  const engine = engineOf(db)
+  if (!engine.canDump) fail(`${ENGINES[db.engine].label} keeps its own checkpoints on disk; there is nothing here to dump`)
+  if (!isUp(db)) fail(`"${name}" is not running. A dump is read from the running database - start it first.`)
+  const databases = attachedDatabases(db)
+  if (!databases.length) fail(`nothing to back up yet: no server is attached to "${name}"`)
+
+  const dir = databaseBackupsDir(name)
+  await fs.promises.mkdir(dir, { recursive: true })
+  const tag = (cleanLabel(label) ?? 'manual').replace(/[^\w-]+/g, '-').slice(0, 40) || 'manual'
+  let base = `${tag}_${stamp()}`
+  for (let n = 2; fs.existsSync(path.join(dir, `${base}.sql`)); n++) base = `${tag}_${stamp()}_${n}`
+  const file = path.join(dir, `${base}.sql`)
+  const pending = `${file}.pending`
+  const parts = databases.map((_, i) => `${pending}.${i}`)
+  try {
+    for (const [i, database] of databases.entries()) await engine.dump(db, database, parts[i])
+    const out = fs.createWriteStream(pending, { flags: 'wx' })
+    for (const part of parts) {
+      for await (const chunk of fs.createReadStream(part)) {
+        if (!out.write(chunk)) await new Promise((resolve) => out.once('drain', resolve))
+      }
+    }
+    await new Promise((resolve, reject) => out.end((err) => (err ? reject(err) : resolve())))
+    await fs.promises.writeFile(`${file.slice(0, -4)}.json`, JSON.stringify({
+      database: name, engine: db.engine, version: db.version ?? null, label: tag, databases, createdAt: new Date().toISOString(),
+    }, null, 2))
+    await fs.promises.rename(pending, file)
+  } finally {
+    await Promise.all([pending, ...parts].map((p) => fs.promises.rm(p, { force: true })))
+  }
+  const { size } = await fs.promises.stat(file)
+  return { name: `${base}.sql`, file, databases, size, sizeHuman: humanBytes(size) }
+}
+
+/**
+ * Put a backup back. The tables in it are replaced as they were when it was taken, so a dump of
+ * how things are now is taken first, labelled "pre-restore": putting back the wrong backup is
+ * itself undone from the same list.
+ */
+export async function restoreDatabaseBackup(name, file) {
+  const db = getDatabase(name)
+  const full = dumpPath(name, file)
+  if (!isUp(db)) fail(`"${name}" is not running. A backup is put back into the running database - start it first.`)
+  const safety = attachedDatabases(db).length ? await backupDatabase(name, { label: 'pre-restore' }) : null
+  await engineOf(db).importSql(db, full)
+  return { restored: path.basename(full), safety: safety?.name ?? null }
+}
+
+export async function deleteDatabaseBackup(name, file) {
+  getDatabase(name)
+  const full = dumpPath(name, file)
+  await fs.promises.rm(full, { force: true })
+  await fs.promises.rm(`${full.slice(0, -4)}.json`, { force: true })
+  return { deleted: path.basename(full) }
+}
+
+/** The file to hand to a download, checked to be one of this database's backups. */
+export function databaseBackupFile(name, file) {
+  getDatabase(name)
+  return dumpPath(name, file)
 }
 
 /**

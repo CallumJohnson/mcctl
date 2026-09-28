@@ -273,11 +273,59 @@ test('restore imports the dump into the database it came from, and leaves nothin
   assert.ok(fs.existsSync(path.join(srv.dir, 'world', 'level.dat')))
 })
 
+test('a database keeps backups of its own: dumped, listed, put back behind a pre-restore dump, and deleted', { timeout: 30000 }, async () => {
+  assert.deepEqual(await services.listDatabaseBackups(DB), [])
+  const status = services.databaseBackupStatus(DB)
+  assert.equal(status.canDump, true)
+  assert.equal(status.running, true)
+  assert.deepEqual(status.databases, [SRV])
+
+  const taken = await services.backupDatabase(DB, { label: 'before upgrade' })
+  assert.match(taken.name, /^before-upgrade_\d{4}-\d\d-\d\d_\d{6}\.sql$/)
+  assert.deepEqual(taken.databases, [SRV])
+  const dir = services.databaseBackupsDir(DB)
+  assert.match(fs.readFileSync(path.join(dir, taken.name), 'utf8'), new RegExp(`-- MariaDB dump \\(fake\\) of ${SRV}`))
+  assert.deepEqual(fs.readdirSync(dir).sort(), [taken.name.replace(/\.sql$/, '.json'), taken.name].sort(),
+    'nothing half-written is left beside it')
+
+  const listed = await services.listDatabaseBackups(DB)
+  assert.equal(listed.length, 1)
+  assert.equal(listed[0].name, taken.name)
+  assert.equal(listed[0].label, 'before-upgrade')
+  assert.deepEqual(listed[0].databases, [SRV])
+  assert.equal(services.databaseBackupFile(DB, taken.name), path.join(dir, taken.name))
+
+  // Putting one back takes a dump of how things are now first, so the restore itself can be undone.
+  const log = () => fs.readFileSync(path.join(mariadb.dataDir(services.getDatabase(DB)), 'sql.log'), 'utf8')
+  const before = log()
+  const restored = await services.restoreDatabaseBackup(DB, taken.name)
+  assert.equal(restored.restored, taken.name)
+  assert.match(restored.safety, /^pre-restore_/)
+  assert.match(log().slice(before.length), new RegExp(`USE \`${SRV}\``))
+  assert.equal((await services.listDatabaseBackups(DB)).length, 2)
+
+  // Only this database's own files, by name: nothing that reaches out of the folder.
+  for (const bad of ['../x.sql', 'x.sql', 'nope', path.join(dir, taken.name)]) {
+    await assert.rejects(services.restoreDatabaseBackup(DB, bad), UserError)
+    assert.throws(() => services.databaseBackupFile(DB, bad), UserError)
+  }
+
+  await services.deleteDatabaseBackup(DB, restored.safety)
+  await services.deleteDatabaseBackup(DB, taken.name)
+  assert.deepEqual(await services.listDatabaseBackups(DB), [])
+  assert.deepEqual(fs.readdirSync(dir), [])
+})
+
 test('stop goes through the admin tool over TCP and is clean, not forced', { timeout: 30000 }, async () => {
   const res = await sup.stop(DB, { timeout: 10000 })
   assert.equal(res.forced, undefined, JSON.stringify(res))
   assert.equal(res.code, 0)
   assert.equal(readState(DB).status, 'stopped')
+})
+
+test('a stopped database refuses a dump and says to start it', async () => {
+  await assert.rejects(services.backupDatabase(DB), /not running/)
+  assert.equal(services.databaseBackupStatus(DB).running, false)
 })
 
 test('with the database stopped, a snapshot still succeeds and says what it lacks; restore leaves the dump in place', { timeout: 30000 }, async () => {
