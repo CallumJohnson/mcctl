@@ -220,7 +220,7 @@ export async function createForServer(serverName, { engine = defaultEngine(), ve
   onProgress?.({ message: `Attaching ${serverName}` })
   let credentials
   try {
-    credentials = attach(name, serverName)
+    credentials = await attach(name, serverName)
   } catch (err) {
     // The server may have been renamed or deleted while the engine downloaded, or the credentials
     // may have failed to provision. A running database nobody is attached to, holding the port,
@@ -258,24 +258,24 @@ export function removeDatabase(name, { purge = false } = {}) {
  * <p>Idempotent: attaching again re-asserts the same credentials rather than minting new ones,
  * so manually configured plugins keep working. Plugin configs are never changed here.
  */
-export function attach(dbName, serverName) {
+export async function attach(dbName, serverName) {
   const db = getDatabase(dbName)
   assertServer(serverName)
   if (!isUp(db)) fail(`"${dbName}" is not running - start it first, then attach`)
   const mod = engineOf(db)
   const record = db.attachments?.[serverName] ?? mod.newRecord(serverName, db)
-  mod.provision(db, record)
+  await mod.provision(db, record)
   updateInstance(dbName, { attachments: { ...(db.attachments ?? {}), [serverName]: record } })
   return credentials(dbName, serverName)
 }
 
 /** Take the user away; the data stays unless `drop` says otherwise. */
-export function detach(dbName, serverName, { drop = false } = {}) {
+export async function detach(dbName, serverName, { drop = false } = {}) {
   const db = getDatabase(dbName)
   const record = db.attachments?.[serverName]
   if (!record) fail(`"${serverName}" is not attached to "${dbName}"`)
   if (isUp(db)) {
-    engineOf(db).deprovision(db, record, { drop })
+    await engineOf(db).deprovision(db, record, { drop })
   } else if (drop) {
     fail(`"${dbName}" is not running, so its data cannot be dropped - start it first, or detach without --drop`)
   }

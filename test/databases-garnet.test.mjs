@@ -55,8 +55,8 @@ test('a Garnet database is created on the Redis port range and starts to "ready"
   assert.equal(await garnet.probe(services.getDatabase(RD)), true)
 })
 
-test('attaching a server to Redis hands out the shared password, a URL and a key prefix, with no user made', () => {
-  const c = services.attach(RD, SRV)
+test('attaching a server to Redis hands out the shared password, a URL and a key prefix, with no user made', async () => {
+  const c = await services.attach(RD, SRV)
   assert.equal(c.kind, 'redis')
   assert.equal(c.database, null)
   assert.equal(c.user, null)
@@ -67,16 +67,16 @@ test('attaching a server to Redis hands out the shared password, a URL and a key
   assert.equal(services.serverAttachments(SRV)[0].kind, 'redis')
 })
 
-test('Redis attach, credential display and detach leave plugin storage and messaging manual', () => {
+test('Redis attach, credential display and detach leave plugin storage and messaging manual', async () => {
   const file = path.join(INSTANCES_DIR, SRV, 'plugins', 'LuckPerms', 'config.yml')
   const original = "# My messaging settings\nstorage-method: h2\nmessaging-service: auto\nredis:\n  enabled: false\n  address: localhost\n  password: ''\n"
   fs.writeFileSync(file, original)
-  services.attach(RD, SRV)
+  await services.attach(RD, SRV)
   assert.ok(services.credentials(RD, SRV).password)
   assert.equal(fs.readFileSync(file, 'utf8'), original)
-  services.detach(RD, SRV)
+  await services.detach(RD, SRV)
   assert.equal(fs.readFileSync(file, 'utf8'), original)
-  services.attach(RD, SRV)
+  await services.attach(RD, SRV)
   assert.equal(fs.readFileSync(file, 'utf8'), original)
 })
 
@@ -97,7 +97,7 @@ test('an external database is registered only if it answers, and attaches like o
   assert.equal(await services.externalStatus(services.getDatabase(EXT)), 'reachable')
   await assert.rejects(sup.start(EXT), /runs elsewhere/)
 
-  const c = services.attach(EXT, SRV)
+  const c = await services.attach(EXT, SRV)
   assert.equal(c.host, '127.0.0.1')
   assert.equal(c.port, live.port)
   assert.equal(services.serverAttachments(SRV).find((a) => a.service === EXT).external, true)
