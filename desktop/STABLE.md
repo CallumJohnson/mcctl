@@ -2,7 +2,7 @@
      A pull request that changes something a person would notice adds its line here, under the
      version it will ship in, so that release day is a read-through. Rewrite the top for each
      release; the build procedure at the bottom stays. -->
-SpawnLoft 1.4 lets an AI assistant change your plugins' settings, not only read about them.
+SpawnLoft 1.4 is a redesigned panel: the console stays on screen while a server's tools open beside it, every server has an overview, settings are one form, and a database can be backed up on its own. An AI assistant can now change your plugins' settings, not only read about them.
 
 - **Windows 10/11 x64:** download `SpawnLoft-Setup-1.4.0.exe`, signed through Microsoft Azure Artifact Signing.
 - **Mac with Apple Silicon:** download `SpawnLoft-1.4.0-mac-arm64.dmg`.
@@ -27,6 +27,7 @@ Existing installs receive 1.4 through the built-in updater. ZIP files are used b
 ## Fixed
 
 - Upgrading a server to a newer Minecraft version left it recorded as the old one, so it kept being offered plugin builds for that version and was started on the Java that version needs rather than the new one's. It now records the version it moved to.
+- Creating a MySQL database could leave the panel unresponsive for several seconds at the end, while it set up the server's database and user; on a slow or freshly installed machine its own requests timed out. That step no longer holds the panel up.
 
 SpawnLoft does not insert database credentials into plugin configuration files.
 
